@@ -14,4 +14,3 @@ Raw data files for the R-scripts are available in the 'data' folder.
 ## License
 
 MIT 
-

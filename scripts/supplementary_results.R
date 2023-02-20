@@ -821,48 +821,310 @@ rm(before, after, both, AAW, A, B, C,EB,D,E,Fi,ESW, G, H, I, Ran,J,K,L)
 ######################   S8   ############################### 
 #############################################################
 
+abun_tested_species <- 
+  data[[3]] %>% 
+  mutate(samples = map(samples, ~
+                         distinct(., Species, rel_abun_species))) %>% 
+  unnest(samples) %>%
+  left_join(., data_species_all_samples %>% 
+              group_by(Plant, Sign) %>% 
+              mutate(n = n()) %>% ungroup() %>% 
+              rename("Species" = "Tax"), by = c("Species", "Plant")) %>% 
+  mutate(tested = ifelse(is.na(Sign), 
+                         "Not tested", 
+                         Sign)) %>%
+  group_by(SampleID, tested, Plant, PrimarySettler, n) %>% 
+  summarise(sum_abun = sum(rel_abun_species)) %>% 
+  group_by(Plant, PrimarySettler, tested, n) %>%
+  summarise(mean_abun = mean(sum_abun)) %>% 
+  mutate(Tax = "Species")
+
+abun_tested_genus_table <- 
+  data[[3]] %>% 
+  mutate(samples = map(samples, ~
+                         distinct(., Genus, rel_abun_genus))) %>% 
+  unnest(samples) %>%
+  left_join(., data_genus_all_samples %>% 
+              group_by(Plant, Sign) %>% 
+              mutate(n = n()) %>% ungroup() %>% 
+              rename("Genus" = "Tax"), by = c("Genus", "Plant")) %>% 
+  mutate(tested = ifelse(is.na(Sign), 
+                         "Not tested", 
+                         Sign)) %>% 
+  group_by(SampleID, Date_rawdata, tested, Plant, PrimarySettler, n) %>% 
+  summarise(sum_abun = sum(rel_abun_genus), .groups = "drop")
+
+abun_tested_genus <- 
+  abun_tested_genus_table %>% 
+  group_by(Plant, PrimarySettler, tested, n) %>%
+  summarise(mean_abun = mean(sum_abun), 
+            sd = sd(sum_abun)) %>% 
+  mutate(Tax = "Genus")
+
+merged <- rbind(abun_tested_genus, abun_tested_species)
+
+merged %>%
+  group_by(Plant, PrimarySettler, Tax) %>% 
+  mutate(tested = factor(tested, levels = rev(c("Not tested", 
+                                                "Insignificant", "Increase", "Decrease"))),
+         Plant = factor(Plant, levels = c("Aalborg West", "Ejby Mølle",
+                                          "Esbjerg West", "Randers" 
+         )),
+         p = cumsum(mean_abun) - (0.5 * mean_abun)) %>%
+  ggplot(aes(fill = tested, x = PrimarySettler, y = mean_abun, 
+             label = ifelse(tested == "Not tested", sprintf("%s", paste0(round(mean_abun, 0), "%")),
+                            sprintf("%s", paste0(round(mean_abun, 0), "%","\n", "(", n, ")" ))))) + 
+  geom_bar(#position="fill", 
+    stat="identity") + 
+  facet_wrap(Plant~Tax, nrow = 1) +
+  geom_text(size = 7, position = position_stack(vjust = 0.6), lineheight = 0.22) + 
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_manual(values = c(#"#797597",  "#6F8FAF", "#708090", "gray80"),
+    "Not tested"="gray45","Decrease"="#CE7E7E", 
+    "Increase"="#6F8FAF", "Insignificant"="gray85")
+  ) +
+  ylab("Relative abundance [%]") +
+  theme_xaringan(css_file = "xaringan-themer.css") +
+  theme(#axis.ticks.y.right = element_blank(),
+    strip.text.x = element_text(size = 28, lineheight = 0.0005, margin = margin(b = 1, t = 1), color = "gray10"),
+    axis.text.y = element_text(size = 20, color = "gray10"),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_markdown(size = 24, color = "gray10",
+                                    linewidth = 0.00000001, lineheight = 0.0001),
+    #axis.title.x = element_markdown(size = 24), 
+    axis.text.x = element_markdown(size =20,linewidth = 0.00000001, lineheight = 0.0001, color = "gray10"),
+    axis.title.x = element_blank(), 
+    legend.position = "bottom", 
+    legend.key.size = unit(0.3, "cm"),
+    legend.text = element_markdown(margin = margin(t = 0.1, b = 0.1), color = "gray10"), 
+    legend.title = element_blank(), 
+    axis.line.y = element_line(color = "gray10", linewidth = 0.2),
+    axis.ticks.y = element_line(color = "gray10", linewidth = 0.2),
+    panel.grid.minor = element_blank(), 
+    panel.grid.major = element_line(linewidth = 0.2, color = "gray90")
+  )
+
+
+ggsave(paste0(OutputPath, "plots/supplementary_results/stackedbar_tested_species.png"), width =6.5, height = 3, units = "in")
 
 
 #############################################################
 ######################  Table S1   ############################### 
 #############################################################
 
+DF <- abun_tested_genus_table %>% 
+  select(-n, -SampleID) %>% 
+  group_by(Plant, tested) %>% 
+  rstatix::t_test(sum_abun ~ PrimarySettler, p.adjust.method = "bonferroni", paired = T) %>% 
+  filter(p < 0.05)
 
+write_tsv(DF, file = paste0(OutputPath, "files/trend_cummulative_abundance_t_test.tsv"))
 
+rm(DF, merged, abun_tested_genus_table, abun_tested_genus, abun_tested_species)
 
 #############################################################
 ######################   S9   ############################### 
 #############################################################
 
-
+# In results.R
 
 #############################################################
 ######################   S10   ############################### 
 #############################################################
 
 
+# In results.R
+
 #############################################################
 ######################   S11  ############################### 
 #############################################################
 
+source(paste0(SourcePath, "upset_plot.R"))
+
+tibble(x = c(0,1), y=c(0,1)) %>% 
+  ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
+  geom_richtext(aes(x = 0.53, y = 0.93, label = "**A**"), size=30, fill = NA, label.color = NA) + 
+  theme_void() + 
+  upset_plot(data_genus_all_samples) +
+  tibble(x = c(0,1), y=c(0,1)) %>% 
+  ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
+  geom_richtext(aes(x = 0.53, y = 0.93, label = "**B**"), size=30, fill = NA, label.color = NA) + 
+  theme_void() +
+  upset_plot(data_genus_random_subsamling)+
+  plot_layout(ncol = 2, widths = c(0.15, 5))
+
+ggsave(paste0(OutputPath, "plots/supplementary_results/upset.png"), width = 10, height = 7)
+
+rm(upset_plot)
 
 #############################################################
 ######################   S12   ############################### 
 #############################################################
+
+#Making vector of plant and species that are tested for in all plants!!!!!
+upset_df_filtered <- 
+  data_genus_all_samples %>% 
+  filter(!str_detect(Tax, "nclassified")) %>% 
+  select(-X) %>% 
+  mutate(
+    Sign = if_else(mean_log2 > 0, "Increase", "Decrease"),
+    Sign = if_else(p_adjust > 0.05, "Insignificant", Sign))
+
+plantpair_ambigous_species <- function(plant_pair){
+  #plant_pair = c("Randers", "Aalborg West")
+  upset_df_filtered %>% 
+    select(-mean_log2, -p_adjust) %>% 
+    filter(Plant %in% plant_pair) %>% 
+    group_by(Tax) %>% 
+    mutate(Plant = paste0(Plant, collapse = "-"), 
+           Sign = paste0(Sign, collapse = "-"), 
+           Plant_pair = paste(plant_pair, collapse = "-<br>")) %>% 
+    distinct() %>% 
+    group_by(Plant, Sign, Plant_pair) %>% 
+    summarise(n = n())
+}
+
+ambigous_species_count <- rbind(
+  plantpair_ambigous_species(c("Aalborg West", "Ejby Mølle")),
+  plantpair_ambigous_species(c("Aalborg West", "Esbjerg West")),
+  plantpair_ambigous_species(c("Esbjerg West", "Ejby Mølle")),
+  plantpair_ambigous_species(c("Randers", "Aalborg West")), 
+  plantpair_ambigous_species(c("Randers", "Ejby Mølle")), 
+  plantpair_ambigous_species(c("Randers", "Esbjerg West"))
+)
+
+
+ambigous_species_count %>% 
+  mutate(common = case_when(
+    Sign == "Decrease-Decrease" | Sign == "Increase-Increase" ~"Same trend",
+    str_detect(Sign, "Insigni") ~ "Insignificant in one or both", 
+    Sign %in% c("Increase-Decrease", "Decrease-Increase") ~ "Inconsistent trend"
+  ), 
+  Plant_pair = factor(Plant_pair, levels = c("Aalborg West-<br>Ejby Mølle", "Aalborg West-<br>Esbjerg West", 
+                                             "Esbjerg West-<br>Ejby Mølle", "Randers-<br>Aalborg West", 
+                                             "Randers-<br>Ejby Mølle", "Randers-<br>Esbjerg West"
+  )),
+  Sign = factor(Sign, levels = c("Increase-Increase", "Decrease-Decrease", "Increase-Decrease", "Decrease-Increase",
+                                 "Decrease-Insignificant", "Increase-Insignificant", "Insignificant-Decrease", 
+                                 "Insignificant-Increase", "Insignificant-Insignificant")), 
+  common = factor(common, levels = c("Same trend","Inconsistent trend", "Insignificant in one or both")),
+  newy=cumsum(n)
+  ) %>%
+  ggplot(aes(y=n, x = Plant_pair)) +
+  ggpattern::geom_bar_pattern(position="stack",stat="identity",
+                              mapping=aes(pattern=common, 
+                                          fill = Sign,
+                              ), pattern_spacing = 0.013) + 
+  ggpattern::scale_pattern_manual(
+    values= c("stripe", "crosshatch", "none"))+   #manually assign pattern
+  geom_label(aes(y = n, label = n, fill  = Sign), size = 6, label.size = NA,
+             color = "black", show.legend = F, alpha = 0.8, label.padding = unit(0.05, "lines"),
+             position = position_stack(vjust = 0.5), 
+  ) + 
+  scale_fill_manual(values = c("#CE7E7E", "#6F8FAF", "#DAA520","#F5DEB3", "grey50","grey60", "grey70", "grey80", "grey90")) +
+  scale_y_continuous(expand = c(0,0)) +
+  ylab("Number of genera") + 
+  theme_xaringan(css_file = "xaringan-themer.css") + 
+  theme(axis.text.x = element_markdown(angle = 0, hjust = 0.5, vjust = 1, size = 14, lineheight = 0.1, color = "gray10"), 
+        axis.text.y = element_text(size = 20, color = "gray10"),
+        axis.title.x = element_blank(), 
+        axis.title.y = element_markdown(size = 24, color = "gray10",
+                                        linewidth = 0.00000001, lineheight = 0.0001),
+        panel.grid.minor = element_blank(), 
+        axis.line.y = element_line(color = "gray10", linewidth = 0.2),
+        axis.ticks.y = element_line(color = "gray10", linewidth = 0.2),
+        axis.ticks.x = element_blank(), 
+        panel.grid.major = element_line(linewidth = 0.2, color = "gray90"),
+        legend.position = "right", legend.direction = "vertical", 
+        legend.text = element_markdown(size = 20, color = "black"), 
+        legend.key.size = unit(8, "pt"),
+        legend.title = element_markdown(size = 20, color = "black", lineheight = 0.1), 
+  ) + 
+  guides(fill = guide_legend(title = "Trend<br>(Plant 1-Plant 2)", title.position = "top", title.vjust = 1, 
+                             nrow = 10, order = 2,
+                             override.aes = list(pattern = c("none","none","none", "none", 
+                                                             "none","none","none", "none", "none")) 
+  ),
+  pattern = guide_legend(title = "Consistency<br>across WWTPs", 
+                         title.position = "top", title.vjust = 1, nrow = 3, order = 1, 
+                         override.aes = list(fill ="white", color = "black", pattern_spacing = 0.01))
+  )
+
+
+ggsave(paste0(OutputPath, "plots/supplementary_results/ambigous_trends.png"), 
+       width = 4.7, height = 3.3, units = "in")
+
+
+rm(ambigous_species_count, plantpair_ambigous_species)
 
 
 #############################################################
 ######################   S13   ############################### 
 #############################################################
 
-
-#############################################################
-######################   S8   ############################### 
-#############################################################
+source(file = paste0(SourcePath, "jitter_boxplot_function.R"))
 
 
+p60000 <- jitter_boxplot_function(
+  tidy_df = data[[3]] %>% mutate(samples = map(samples, 
+                                               ~mutate(., rel_abun_genus = 
+                                                         ifelse(rel_abun_genus == 0,
+                                                                0.0001,
+                                                                rel_abun_genus)))),
+  include_tax = x %>% filter(Guild == "__Nitrifiers__") %>% filter(!Genus %in% c("g__Obscuribacter", "g__midas_g_94")) %>% distinct(Genus) %>% unlist(),
+  relative_to_COD = F) + #theme(legend.position = "none") +
+  coord_trans(y = "log10")
 
 
+data_genus_100000_randers <- read.csv(paste0(OutputPath, "files/genus_wilcox_test_2022-09_30_rare_100000_min_12_all_samples_Randers.txt"))
+
+load(file = paste0(OutputPath, "R_environments/Randers_rare_100000_20220930.Rdata"))    ### Called df_for_function
+
+p100000 <- jitter_boxplot_function(tidy_df = df_for_function %>% 
+                                     mutate(samples = map(samples, 
+                                                          ~mutate(., rel_abun_genus = 
+                                                                    ifelse(rel_abun_genus == 0,
+                                                                           0.0001,
+                                                                           rel_abun_genus)))), 
+                                   wilcox_df = data_genus_100000_randers,
+                                   include_tax = x %>% filter(Guild == "__Nitrifiers__") %>% distinct(Genus) %>% unlist(),
+                                   relative_to_COD = F) + 
+  coord_trans(y = "log10")
+
+
+design <- c(
+  area(1, 1),
+  area(2, 2),
+  area(3, 1),
+  area(4, 2)
+)
+
+
+tibble(x = c(0,1), y=c(0,1)) %>% 
+  ggplot() + 
+  scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
+  geom_richtext(aes(x = 0.5, y = 0.5, label = "**A**"), size=20, fill = NA, label.color = NA) + 
+  theme_void() +
+  p60000 +
+  tibble(x = c(0,1), y=c(0,1)) %>% 
+  ggplot() + 
+  scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
+  geom_richtext(aes(x = 0.5, y = 0.5, label = "**B**"), size=20, fill = NA, label.color = NA) + 
+  theme_void() +
+  p100000 + 
+  plot_layout(ncol = 2, 
+              widths = c(1, 9),
+              heights = c(1.2, 8),
+              design = design, guides = "collect") & 
+  theme(strip.placement = NULL, legend.position = "bottom", 
+        legend.box = "vertical")
+
+
+ggsave(paste0(OutputPath, "plots/supplementary_results/nitrifiers.png"), 
+       width = 6, height = 7)
+
+
+rm(jitter_boxplot_function, p60000, data_genus_100000_randers, design, p100000, df_for_function, x )
 
 
 

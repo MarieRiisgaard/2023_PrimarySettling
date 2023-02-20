@@ -2,6 +2,15 @@
 # Results plots
 #####################################################################
 
+# Set WD
+setwd("C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling")
+
+## Load data into ampvis format
+DataPath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/data/"
+OutputPath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/output/"
+SourcePath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/scripts/"
+
+
 #################################
 # Load packages 
 ################################
@@ -57,7 +66,7 @@ data_species_all_samples <-
 
 
 ############################################
-# Figure 1
+# Figure 1: COD removal
 #############################################
 
 data[[2]] %>% 
@@ -130,7 +139,7 @@ ggsave(paste0(OutputPath, "plots/results/COD_removal.pdf"), width = 8, height = 
 
 
 ############################################
-# Figure 2
+# Figure 2: Overall PCA
 #######################################
 
 # Plot function: 
@@ -150,9 +159,8 @@ ggsave(paste0(OutputPath, "plots/results/overall_PCA.png"), width = 7.5, height 
 
 
 ############################################
-# Figure 2
+# Figure 3: Influent streams
 #######################################
-
 
 plot_all_influent_streams(amp_object = amp_merged_species) + 
   plot_all_influent_streams(amp_object = amp_merged_species, primary_settler = "After") + 
@@ -162,9 +170,8 @@ plot_all_influent_streams(amp_object = amp_merged_species) +
 ggsave(paste0(OutputPath, "plots/results/all_influentstreams.png"), width = 10, height = 5.5, units = "in")
 
 
-
 ####################################
-# Figure 3: Upset
+# Figure 5: Upset plot
 ###################################
 
 source(paste0(SourcePath, "upset_plot.R"))
@@ -174,9 +181,8 @@ upset_plot(data_genus_all_samples)
 ggsave(paste0(primarysettling_folder, "output/plots/PrimarySettling_article/upset.png"), width = 7.5, height = 4)
 
 
-
 ####################################
-# Figure XX + SXX: Sankey
+# Figure 4 + S10: Sankey
 ###################################
 
 source(paste0(SourcePath, "sankey_plot.R"))
@@ -199,8 +205,76 @@ ggsave(paste0(OutputPath, "plots/results/sankey_Esbjerg.png"), width = 6.5, heig
 rm(san_key_plot)
 
 
+###################################################
+# Figure 6: Stacked bar with cummulative abundance
+###################################################
+
+abun_tested_genus <- 
+  data[[3]] %>% 
+  mutate(samples = map(samples, ~
+                         distinct(., Genus, rel_abun_genus))) %>% 
+  unnest(samples) %>%
+  left_join(., data_genus_all_samples %>% 
+              group_by(Plant, Sign) %>% 
+              mutate(n = n()) %>% ungroup() %>% 
+              rename("Genus" = "Tax"), by = c("Genus", "Plant")) %>% 
+  mutate(tested = ifelse(is.na(Sign), 
+                         "Not tested", 
+                         Sign)) %>% 
+  group_by(SampleID, Date_rawdata, tested, Plant, PrimarySettler, n) %>% 
+  summarise(sum_abun = sum(rel_abun_genus), .groups = "drop") %>% 
+  group_by(Plant, PrimarySettler, tested, n) %>%
+  summarise(mean_abun = mean(sum_abun), 
+            sd = sd(sum_abun)) %>% 
+  mutate(Tax = "Genus")
+
+abun_tested_genus %>%
+  group_by(Plant, PrimarySettler, Tax) %>% 
+  filter(Tax == "Genus") %>% 
+  mutate(tested = factor(tested, levels = rev(c("Not tested", 
+                                                "Insignificant", "Increase", "Decrease"))),
+         Plant = factor(Plant, levels = c("Aalborg West", "Ejby Mølle",
+                                          "Esbjerg West", "Randers" 
+         )),
+         p = cumsum(mean_abun) - (0.5 * mean_abun)) %>%
+  ggplot(aes(fill = tested, x = PrimarySettler, y = mean_abun, 
+             label = ifelse(tested == "Not tested", sprintf("%s", paste0(round(mean_abun, 0), "%")),
+                            sprintf("%s", paste0(round(mean_abun, 0), "%","\n", "(", n, ")" ))))) + 
+  geom_bar(#position="fill", 
+    stat="identity") + 
+  facet_wrap(~Plant, nrow = 1) +
+  geom_text(size = 8, position = position_stack(vjust = 0.6), lineheight = 0.22) + 
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_manual(values = c(#"#797597",  "#6F8FAF", "#708090", "gray80"),
+    "Not tested"="gray45","Decrease"="#CE7E7E", 
+    "Increase"="#6F8FAF", "Insignificant"="gray85")
+  ) +
+  ylab("Relative abundance [%]") +
+  theme_xaringan(css_file = "xaringan-themer.css") +
+  theme(#axis.ticks.y.right = element_blank(),
+    strip.text.x = element_text(size = 28, lineheight = 0.0005, margin = margin(b = 1, t = 1), color = "gray10"),
+    axis.text.y = element_text(size = 20, color = "gray10"),
+    axis.ticks.x = element_blank(), 
+    axis.title.y = element_markdown(size = 24, color = "gray10",
+                                    linewidth = 0.00000001, lineheight = 0.0001),
+    #axis.title.x = element_markdown(size = 24), 
+    axis.text.x = element_markdown(size =20,linewidth = 0.00000001, lineheight = 0.0001, color = "gray10"),
+    axis.title.x = element_blank(), 
+    legend.position = "bottom", 
+    legend.key.size = unit(0.3, "cm"),
+    legend.text = element_markdown(margin = margin(t = 0.1, b = 0.1), color = "gray10"), 
+    legend.title = element_blank(), 
+    axis.line.y = element_line(color = "gray10", linewidth = 0.2),
+    axis.ticks.y = element_line(color = "gray10", linewidth = 0.2),
+    panel.grid.minor = element_blank(), 
+    panel.grid.major = element_line(linewidth = 0.2, color = "gray90")
+  )
+
+ggsave(paste0(OutputPath, "plots/results/stackedbar_cum_abun_genus.png"), width =5, height = 3, units = "in")
+
+
 ####################################
-# Figure XX + SXX: Fold change
+# Figure 7 + S9: Fold change
 ###################################
 
 source(paste0(SourcePath, "fold_change_plot.R"))

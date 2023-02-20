@@ -2,13 +2,6 @@
 #  Run this script first to generate the different dataframes
 #############################################################################
 
-# Set WD
-setwd("C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling")
-
-## Load data into ampvis format
-DataPath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/data/"
-OutputPath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/output/"
-SourcePath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/scripts/"
 
 
 memory.limit(20000)
@@ -21,13 +14,7 @@ library(vroom) # Load DMI data
 library(tidyverse)
 
 ############################################################################
-#   Load data
-############################################################################
-
-
-
-###############################################################################
-# Filter
+#   Load data and Filter
 ###############################################################################
 
 metadata = read_xlsx(paste0(DataPath, "sequencing_data/metadata.xlsx"))

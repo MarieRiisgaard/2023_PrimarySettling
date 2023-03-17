@@ -6,17 +6,18 @@
 traffic_plot_with_bars <- function(
     plot_df_1 = plot_df, 
     #round = round_d, 
-    limit_vec = c(min(plot_df_1$mean, na.rm = T),max(plot_df_1$mean, na.rm = T)),
+    limit_vec = c(min(plot_df_1$mean, na.rm = T), max(plot_df_1$mean, na.rm = T)),
     wilcox_genus = data_genus_all_samples){
   
 
   p1 <- plot_df_1 %>% 
     ggplot(aes(x = PrimarySettler, y = lab)) +
     geom_text(aes(label = paste0(weights::rd(mean, 
-                                       digits = ifelse(mean < 0.1, ifelse(mean < 0.01, 3,2), 1
-                                                       ), add = F)), 
+                                       digits = ifelse(mean < 0.1, ifelse(mean < 0.01, 3, 2), 1
+                                                     ), 
+                                 add = F)), 
                    color = Sing_PS),
-              show.legend = F, size=12.5
+              show.legend = F, size=11
               ) +
     scale_color_manual(values = c("Before<br>primary settling"="black", 
                                   "Decrease after<br>primary settling"="black", 
@@ -37,7 +38,7 @@ traffic_plot_with_bars <- function(
           #strip.text.y = element_markdown(size = 32),
           axis.text.x.bottom = element_blank(), 
           #strip.background = element_blank(), 
-          axis.text.y = element_markdown(size = 26, color = "black"),
+          axis.text.y = element_markdown(size = 30, color = "black"),
           #strip.placement = "outside", 
           legend.title = element_blank(),
           legend.position = "none",
@@ -50,7 +51,9 @@ traffic_plot_with_bars <- function(
   p2 <- plot_df_1 %>% ###
     ggplot(aes(x = mean_diff, y = lab, fill = Sign)) + 
     geom_col() + 
-    scale_x_continuous(position = "top",  name = "Mean fold change", expand = c(0,0), limits = c(0, max(plot_df_1$mean_diff)+0.01)) +
+    scale_x_continuous(position = "top",  name = "Mean fold change", expand = c(0,0), 
+                       limits = c(0, max(plot_df_1$mean_diff)+0.01)
+                       ) +
     #coord_trans(x="sqrt") +
     theme_xaringan(css_file = "xaringan-themer.css") +
     theme(axis.text.y = element_blank(), 
@@ -60,7 +63,8 @@ traffic_plot_with_bars <- function(
           legend.text = element_markdown(size = 26, lineheight = 0.1), 
           legend.title = element_blank(),
           axis.title.x.top = element_text(size = 26, lineheight = 0.001, color = "grey10"), 
-          axis.ticks.x.top = element_blank(), axis.text.x.top = element_text(size = 18, color = "black"),
+          axis.ticks.x.top = element_line(color = "grey10", linewidth = 0.2), 
+          axis.text.x.top = element_text(size = 18, color = "black"),
           axis.title.y = element_blank(), 
           #axis.text.x.bottom = element_text(size = 20), axis.text.x.top = element_blank(),
           panel.grid = element_line(linewidth = 0.2), 
@@ -76,7 +80,8 @@ traffic_plot_with_bars <- function(
 
 
 patch_plots <- function(data, select_tax_vec, vlabel_name){ 
-
+  #data = df_traffic %>% filter(Genus == "g__Arcobacter")
+  #select_tax_vec = ("g__Arcobacter")
 #select_tax_vec = select_tax, 
 #vlabel_name = "**15 most abundant genera**",
   plot_df <- data %>% 
@@ -101,7 +106,7 @@ E <- plot_df %>%
   traffic_plot_with_bars()  
 A <- plot_df %>% filter(Plant == "Aalborg West") %>% 
   traffic_plot_with_bars()  
-EM <- plot_df %>% filter(Plant == "Ejby Mølle") %>% 
+EM <- plot_df %>% filter(Plant == "Ejby MÃ¸lle") %>% 
   traffic_plot_with_bars()  
 R <- plot_df %>% filter(Plant == "Randers") %>% 
   traffic_plot_with_bars()  
@@ -266,39 +271,39 @@ empty_plot <- ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuou
         panel.background = element_rect(fill = "transparent", color = "gray80"))
 
 plot_article <- empty_plot + geom_richtext(aes(x = 0.46, y = 0.5, label = "**Aalborg West**"), size=15, fill = NA, label.color = NA) + 
-  empty_plot + geom_richtext(aes(x = 0.37, y = 0.5, label = "**Ejby Mølle**"), size=15, fill = NA, label.color = NA) + 
+  empty_plot + geom_richtext(aes(x = 0.37, y = 0.5, label = "**Ejby MÃ¸lle**"), size=15, fill = NA, label.color = NA) + 
   empty_plot + geom_richtext(aes(x = 0.48, y = 0.5, label = "**Esbjerg West**"), size=15, fill = NA, label.color = NA) + 
   empty_plot + geom_richtext(aes(x = 0.28, y = 0.5, label = "**Randers**"), size=15, fill = NA, label.color = NA) +
 ## TOP 15
   T_15[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  T_15[[1]][[1]] + theme(axis.text.y = element_blank()) + T_15[[1]][[2]] + 
-  T_15[[2]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[2]][[2]]  + 
-  T_15[[3]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[3]][[2]]  + 
-  T_15[[4]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[4]][[2]]  + 
+  T_15[[1]][[1]] + theme(axis.text.y = element_blank()) + T_15[[1]][[2]] + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  T_15[[2]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[2]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  T_15[[3]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[3]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  T_15[[4]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[4]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
 ## PAO 
   PAO[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  PAO[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[1]][[2]] + theme(axis.title.x.top = element_blank()) +
-  PAO[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  PAO[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  PAO[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +
+  PAO[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[1]][[2]] + theme(axis.title.x.top = element_blank()) + scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  PAO[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  PAO[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  PAO[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
 ## GAO 
   GAO[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  GAO[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[1]][[2]] + theme(axis.title.x.top = element_blank()) +
-  GAO[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  GAO[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  GAO[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +
+  GAO[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[1]][[2]] + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  GAO[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  GAO[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  GAO[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
 ## Nitrifiers
   Nit[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  Nit[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[1]][[2]] + theme(axis.title.x.top = element_blank()) +
-  Nit[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  Nit[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  Nit[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[4]][[2]]  +theme(axis.title.x.top = element_blank()) +
+  Nit[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[1]][[2]] + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  Nit[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  Nit[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  Nit[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[4]][[2]]  +theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
 ## Filaments
   Fila[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  Fila[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[1]][[2]] + theme(axis.title.x.top = element_blank()) +
-  Fila[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  Fila[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  Fila[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[4]][[2]]  +theme(axis.title.x.top = element_blank()) +
+  Fila[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[1]][[2]] + theme(axis.title.x.top = element_blank()) + scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  Fila[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  Fila[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  Fila[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   # Top 
   empty_plot +  geom_richtext(aes(x = 0.32, y = 0.5, label = "**15 most abundant genera**", angle = 270), 
                 size=11, fill = NA, label.color = NA) + 
@@ -309,19 +314,19 @@ empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**PAO**", angle = 270
   empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**GAO**", angle = 270), 
                 size=11, fill = NA, label.color = NA) + 
   # Nit
-  empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**N.**", angle = 270), 
-                size=11, fill = NA, label.color = NA) + 
+  empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**Nit.**", angle = 270), 
+                size=10, fill = NA, label.color = NA, label.padding = unit(0.01, "mm")) + 
 # Fila 
   empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**Filaments**", angle = 270), 
                 size=11, fill = NA, label.color = NA) + 
 # PLOTLAYOUT 
   plot_layout(nrow = 2, guides = "collect", 
-              heights = c(2, 24, 6,4,1,7),
+              heights = c(2, 24, 6,4.2,1.3,7.2),
               widths = c(genus_name_width, 
                          p1_width, p2_width,p1_width, p2_width, p1_width, p2_width,p1_width, p2_width, 
                          vlabel_width), 
               design = design) & 
-  theme(legend.position = "none")
+  theme(legend.position = "none", axis.title.x = element_blank())
 
 
 
@@ -352,6 +357,7 @@ df_traffic_common <- data[[3]] %>%
   distinct() %>%
   group_by(Plant, PrimarySettler, Genus, Sign, Guild, mean_diff) %>%
   summarise(mean = median(rel_abun_genus), .groups = "drop") %>%
+  filter(PrimarySettler != "After") %>% 
   mutate(Top = "__15 most abundant genera__") %>% 
   filter(Genus %in% unlist(common$Tax)) %>%    # FILTER for only common genera
   #filter(mean == 0) #%>% 
@@ -359,7 +365,7 @@ df_traffic_common <- data[[3]] %>%
   mutate(Top = case_when(              # Divide into groups based on abundance 
     min(mean) >= 0.1 ~ "large", 
     min(mean) >= 0.01 & min(mean) < 0.1 ~ "middle", 
-    min(mean) <= 0.01 ~ "small")
+    min(mean) < 0.01 ~ "small")
   ) %>% 
   ungroup()
 
@@ -403,30 +409,30 @@ design <- c(
 
 plot_supplementary <- 
   empty_plot + geom_richtext(aes(x = 0.46, y = 0.5, label = "**Aalborg West**"), size=15, fill = NA, label.color = NA) + 
-  empty_plot + geom_richtext(aes(x = 0.37, y = 0.5, label = "**Ejby Mølle**"), size=15, fill = NA, label.color = NA) + 
+  empty_plot + geom_richtext(aes(x = 0.37, y = 0.5, label = "**Ejby MÃ¸lle**"), size=15, fill = NA, label.color = NA) + 
   empty_plot + geom_richtext(aes(x = 0.48, y = 0.5, label = "**Esbjerg West**"), size=15, fill = NA, label.color = NA) + 
   empty_plot + geom_richtext(aes(x = 0.28, y = 0.5, label = "**Randers**"), size=15, fill = NA, label.color = NA) +
   ## TOP 15
   all[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  all[[1]][[1]] + theme(axis.text.y = element_blank()) + all[[1]][[2]] + 
-  all[[2]][[1]]+ theme(axis.text.y = element_blank()) + all[[2]][[2]]  + 
-  all[[3]][[1]]+ theme(axis.text.y = element_blank()) + all[[3]][[2]]  + 
-  all[[4]][[1]]+ theme(axis.text.y = element_blank()) + all[[4]][[2]] +
+  all[[1]][[1]] + theme(axis.text.y = element_blank()) + all[[1]][[2]] + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all[[2]][[1]]+ theme(axis.text.y = element_blank()) + all[[2]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all[[3]][[1]]+ theme(axis.text.y = element_blank()) + all[[3]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all[[4]][[1]]+ theme(axis.text.y = element_blank()) + all[[4]][[2]] +scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   ## TOP 15
   all1[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  all1[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank())  + all1[[1]][[2]] + theme(axis.title.x.top = element_blank()) +
-  all1[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all1[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  all1[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all1[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +
-  all1[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all1[[4]][[2]] +theme(axis.title.x.top = element_blank()) +
+  all1[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank())  + all1[[1]][[2]] + theme(axis.title.x.top = element_blank()) + scale_x_continuous(limits = c(0, 11.7), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all1[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all1[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 11.7), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all1[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all1[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 11.7), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all1[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all1[[4]][[2]] +theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 11.7), position = "top",  name = "Mean fold change", expand = c(0,0))+
   ## TOP 15
   all2[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
-  all2[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) +all2[[1]][[2]] + theme(axis.title.x.top = element_blank()) +
-  all2[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all2[[2]][[2]]  + theme(axis.title.x.top = element_blank()) + 
-  all2[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank())  + all2[[3]][[2]]  +theme(axis.title.x.top = element_blank()) +
-  all2[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all2[[4]][[2]] + theme(axis.title.x.top = element_blank()) +
+  all2[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) +all2[[1]][[2]] + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 12.3), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all2[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all2[[2]][[2]]  + theme(axis.title.x.top = element_blank()) + scale_x_continuous(limits = c(0, 12.3), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all2[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank())  + all2[[3]][[2]]  +theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 12.3), position = "top",  name = "Mean fold change", expand = c(0,0))+
+  all2[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + all2[[4]][[2]] + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 12.3), position = "top",  name = "Mean fold change", expand = c(0,0))+
   # PLOTLAYOUT 
   plot_layout(nrow = 2, guides = "collect", 
-              heights = c(2, 8.5, 29, 31),
+              heights = c(2, 11.5, 27, 28),
               widths = c(genus_name_width, 
                          p1_width, p2_width,p1_width, p2_width, p1_width, p2_width,p1_width, p2_width, 
                          vlabel_width), 
@@ -444,6 +450,56 @@ rm(patch_plots, traffic_plot_with_bars)
 
 
 
+############# Abstract ###########
 
-
-
+# all <- patch_plots(data = df_traffic %>% 
+#                      filter(Genus %in% c("g__Tetrasphaera", "g__Ca_Accumulibacter", "g__Dechloromonas", "g__Ca_Microthrix", "g__Gordonia")) %>% 
+#                      mutate(Genus = factor(Genus, levels = c("g__Ca_Accumulibacter", "g__Dechloromonas", "g__Tetrasphaera", "g__Ca_Microthrix", "g__Gordonia"))), 
+#               select_tax_vec = 
+#                 df_traffic %>% 
+#               filter(Genus %in% 
+#                        c("g__Tetrasphaera", "g__Ca_Accumulibacter", "g__Dechloromonas", "g__Ca_Microthrix", "g__Gordonia")),
+#               vlabel_name = "Abstract")
+# 
+# # Design
+# design <- c(
+#   #area(1,1), # empty
+#   area(1, 2, r = 3),# text 1
+#   area(1, 4, r = 5),# text 2
+#   area(1, 6, r = 7),# text 3
+#   area(1, 8, r = 9),# text 4
+#   # Top abun
+#   area(2,1), # Names
+#   area(2,2), area(2,3), # top 
+#   area(2,4), area(2,5), # top
+#   area(2,6), area(2,7),# top
+#   area(2,8), area(2,9)) # top
+# 
+# label_height = 0.005
+# plot_height = 1
+# genus_name_width = 0.0004
+# p1_width = 0.50 
+# p2_width = 1.01
+# vlabel_width = 0.2
+# 
+# 
+# plot_supplementary <- 
+#   empty_plot + geom_richtext(aes(x = 0.46, y = 0.5, label = "**Aalborg West**"), size=15, fill = NA, label.color = NA) + 
+#   empty_plot + geom_richtext(aes(x = 0.37, y = 0.5, label = "**Ejby MÃ¸lle**"), size=15, fill = NA, label.color = NA) + 
+#   empty_plot + geom_richtext(aes(x = 0.48, y = 0.5, label = "**Esbjerg West**"), size=15, fill = NA, label.color = NA) + 
+#   empty_plot + geom_richtext(aes(x = 0.28, y = 0.5, label = "**Randers**"), size=15, fill = NA, label.color = NA) +
+#   ## TOP 15
+#   all[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
+#   all[[1]][[1]] + theme(axis.text.y = element_blank()) + all[[1]][[2]] + 
+#   all[[2]][[1]]+ theme(axis.text.y = element_blank()) + all[[2]][[2]]  + theme(legend.position = "none") +
+#   all[[3]][[1]]+ theme(axis.text.y = element_blank()) + all[[3]][[2]]  + theme(legend.position = "none") +
+#   all[[4]][[1]]+ theme(axis.text.y = element_blank()) + all[[4]][[2]] +  theme(legend.position = "none") +
+#   plot_layout(nrow = 2, guides = "collect", 
+#               heights = c(2, 8.5, 29, 31),
+#               widths = c(genus_name_width, 
+#                          p1_width, p2_width,p1_width, p2_width, p1_width, p2_width,p1_width, p2_width, 
+#                          vlabel_width), 
+#               design = design) & 
+#   theme(legend.position = "right")
+# plot_supplementary
+# ggsave(paste0(OutputPath, "/plots/abstract.png"), height = 2, width = 8)

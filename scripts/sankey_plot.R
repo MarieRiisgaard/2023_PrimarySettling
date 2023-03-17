@@ -3,7 +3,7 @@
 #########################################
 
 san_key_plot <- function(plant){
-  
+  #plant = "Randers"
   unique_genus <- data[[3]] %>% sample_n(50) %>% 
     unnest(samples) %>% distinct(Genus, Species) 
   
@@ -26,21 +26,27 @@ san_key_plot <- function(plant){
   
   # Make sankey df using the make_long function
   san_key <-  
-    full_join(genus_results, species_results) %>% 
+    full_join(genus_results, species_results, multiple = "all") %>% 
     filter(Plant == plant) %>% 
     mutate(Sign_species = ifelse(is.na(Sign_species), "Not tested", Sign_species),
            Sign_genus = ifelse(is.na(Sign_genus), "Not tested", Sign_genus))  %>% 
     select(Plant, Sign_genus, Sign_species) %>% 
-    ggsankey::make_long(Plant, Sign_genus, Sign_species) 
+    #ggsankey::make_long(Plant, Sign_genus, Sign_species) 
+    ggsankey::make_long(Sign_species, Sign_genus, Plant) 
+    
   
   # Make df for lables  
   n_genus <- genus_results %>% 
     filter(Plant == plant) %>% 
     group_by(Sign_genus) %>% 
-    summarise(genus = n(), next_x = "Sign_species", .groups = "drop") %>% 
+    summarise(genus = n(), next_x = "Sign_species", .groups = "drop") %>%
+    #summarise(genus = n(), next_x = "Plant", .groups = "drop") %>% 
     rename("node" = "Sign_genus")
   n_genus <- n_genus %>% 
-    add_row(node = plant, genus = sum(n_genus$genus), next_x = "Sign_genus")
+    add_row(node = plant, genus = sum(n_genus$genus), next_x = "Sign_genus") %>% 
+    mutate(next_x = case_when(next_x=="Sign_genus" ~ NA, 
+                              next_x=="Sign_species" ~ "Plant"))
+  
   
   # Add labels to sankey df
   dagg <- san_key %>%
@@ -48,30 +54,46 @@ san_key_plot <- function(plant){
     group_by(node, next_x)%>% 
     tally() %>%
     left_join(n_genus) %>%
-    group_by(node, next_x,n) %>%
-    summarise(genus = ifelse(is.na(next_x), paste0(n) , paste0(n, "/", genus)),
+    group_by(node, next_x, n) %>%
+    summarise(genus = ifelse(is.na(genus), paste0(n) , paste0(n, "/", genus)),
               .groups = "drop")
+  
+  #Make levels manualy inorder  
+  # df2 <- full_join(san_key, dagg) %>%
+  #   mutate(
+  #     next_x = "1", 
+  #     next_x = if_else(x == "Plant", "2", next_x), 
+  #     next_x = if_else(x == "Sign_genus", "3", next_x),
+  #     next_x = if_else(x == "Sign_species", "NA", next_x),
+  #   )
+  # 
   
   #Make levels manualy inorder  
   df2 <- full_join(san_key, dagg) %>%
     mutate(
+      #x = fct_rev(x),
       next_x = "1", 
-      next_x = if_else(x == "Plant", "2", next_x), 
+      next_x = if_else(x == "Plant", "4", next_x), 
       next_x = if_else(x == "Sign_genus", "3", next_x),
-      next_x = if_else(x == "Sign_species", "NA", next_x)
+      next_x = if_else(x == "Sign_species", "2", next_x),
+      next_node = if_else(x == "Sign_genus", plant, next_node)
+      #next_x = factor(next_x)
     )
+  
+  
   
   # Factor in order to determine the order inwhich the results appear 
   pl <- 
     df2 %>% 
-    mutate(node = factor(node, levels = c(plant, "Not tested", 
+    mutate(
+      node = factor(node, levels = c(plant, "Not tested", 
                                           "Insignificant", 
                                           "Decrease", 
                                           "Increase")), 
-    next_node = factor(next_node, levels = c("Not tested", 
+      next_node = factor(next_node, levels = c("Not tested", 
                                              "Insignificant", 
                                              "Decrease", 
-                                             "Increase", NA))) %>% 
+                                             "Increase", plant, NA))) %>% 
     ggplot(aes(x = x
                , next_x = next_x
                , node = node
@@ -81,7 +103,7 @@ san_key_plot <- function(plant){
     ggsankey::geom_sankey(flow.alpha = 0.5
                 , node.color = "black"
                   ,show.legend = FALSE) + 
-    ggsankey::geom_sankey_label(size = 8, color = "black", fill= "white", hjust = 0.2) + 
+    ggsankey::geom_sankey_label(size = 8, color = "black", fill= "white", hjust = 0.8) + 
     scale_x_discrete(expand = c(0.001,0.5), 
                      labels = c(
                        "Plant" = "No. of tested taxa<br>(No. of species/No. of genera)", 

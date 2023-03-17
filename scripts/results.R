@@ -3,13 +3,12 @@
 #####################################################################
 
 # Set WD
-setwd("C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling")
+#setwd("C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling")
 
 ## Load data into ampvis format
-DataPath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/data/"
-OutputPath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/output/"
-SourcePath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/scripts/"
-
+DataPath <- "C:/Users/HD95LP/OneDrive - Aalborg Universitet/visual_studio_code/2023_PrimarySettling/data/"
+OutputPath <- "C:/Users/HD95LP/OneDrive - Aalborg Universitet/visual_studio_code/2023_PrimarySettling/output/"
+SourcePath <- "C:/Users/HD95LP/OneDrive - Aalborg Universitet/visual_studio_code/2023_PrimarySettling/scripts"
 
 #################################
 # Load packages 
@@ -21,7 +20,10 @@ pacman::p_load(
   lubridate,
   ggrepel,
   scales,
-  xaringanthemer
+  xaringanthemer,
+  tidyverse, 
+  showtext, 
+  ampvis2
 )
 
 style_duo_accent(
@@ -37,12 +39,14 @@ style_duo_accent(
 load(paste0(OutputPath, "R_environments/","Environment_20221025.RData"))
 
 # Generate dataframe from scratch 
-  # source(paste0(SourcePath, "load_data.R"))
-  # data <- master_function(reads_randers = 60000,
-  #                         reads_other = 60000,
-  #                         rarefy = T,
-  #                         save_non_merged_ampvis = T)
-  # save.image(file=paste0(OutputPath, "/R_environments/", "Environment_", format(Sys.Date(), format = "%Y%m%d"), ".RData"))
+  source(paste0(SourcePath, "/load_data.R"))
+  data <- master_function(reads_randers = 60000,
+                          reads_other = 60000,
+                          rarefy = T,
+                          save_non_merged_ampvis = T)
+  rm(d_COD_3, d_meta_by_date, tidy_meta, metadata, getSeason, randers_prop_flow, master_function)
+  save.image(file=paste0(OutputPath, "/R_environments/", "Environment_", format(Sys.Date(), format = "%Y%m%d"), ".RData"))
+
 
 
 # Load results from wilcox_test.R
@@ -54,6 +58,7 @@ data_genus_random_subsamling <-
 data_genus_all_samples <- 
   read.csv(paste0(OutputPath, "files/genus_wilcox_test_2022-10-06_rare_60000_min_12_all_samples.txt")) %>% 
   mutate(
+    Plant = ifelse(str_detect(Plant, "\xf8"), str_replace(Plant, "\xf8", "Ã¸"), Plant),
     Sign = if_else(mean_log2 > 0, "Increase", "Decrease"),
     Sign = if_else(p_adjust > 0.05, "Insignificant", Sign)) 
 
@@ -84,7 +89,7 @@ data[[2]] %>%
          quant75 = quantile(values, probs = 0.75),
          iqr = quant75-quant75, 
          Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers")),
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers")),
   ) %>% 
   ungroup() %>% 
   group_by(Plant, name) %>% 
@@ -148,7 +153,7 @@ PCA_plantwise <- source(paste0(SourcePath, "PCA_plots.R"), local = knitr::knit_g
 amp_merged_species <- data[[4]] 
 all <- 
   PCA_paired_season_color("Aalborg West", amp_object = amp_merged_species) + labs(title = paste0("__Aalborg West__ (n=36)")) +
-  PCA_paired_season_color("Ejby Mølle", amp_object = amp_merged_species) + labs(title = paste0("__Ejby Mølle__ (n=29)")) +
+  PCA_paired_season_color("Ejby MÃ¸lle", amp_object = amp_merged_species) + labs(title = paste0("__Ejby MÃ¸lle__ (n=29)")) +
   PCA_paired_season_color("Esbjerg West", amp_object = amp_merged_species) + labs(title = paste0("__Esbjerg West__ (n=24)")) +
   PCA_paired_season_color("Randers", amp_object = amp_merged_species) + labs(title = paste0("__Randers__ (n=42)")) 
 
@@ -185,22 +190,22 @@ ggsave(paste0(primarysettling_folder, "output/plots/PrimarySettling_article/upse
 # Figure 4 + S10: Sankey
 ###################################
 
-source(paste0(SourcePath, "sankey_plot.R"))
+source(paste0(SourcePath, "/sankey_plot.R"))
 
 ## All 
 san_key_plot("Randers") + theme(axis.text.x = element_blank()) +
-  san_key_plot("Ejby Mølle")  + theme(axis.text.x = element_blank())+ 
+  san_key_plot("Ejby MÃ¸lle")  + theme(axis.text.x = element_blank())+ 
   san_key_plot("Esbjerg West")  + theme(axis.text.x = element_blank()) +
   san_key_plot("Aalborg West") + theme(axis.text.x = element_markdown(size = 26, lineheight = 0.3)) +
   plot_layout(ncol = 1)
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/sankey.png"), width = 6.5, height = 6.5,  units = "in")
+ggsave(paste0(OutputPath, "plots/supplementary_results/sankey_rev.png"), width = 6.5, height = 6.5,  units = "in")
 
 ## Only Esbjerg West
 san_key_plot("Esbjerg West") + theme(axis.text.x = element_markdown(size = 26, lineheight = 0.3)) +
   plot_layout(ncol = 1)
 
-ggsave(paste0(OutputPath, "plots/results/sankey_Esbjerg.png"), width = 6.5, height = 2,  units = "in")
+ggsave(paste0(OutputPath, "plots/results/sankey_Esbjerg_rev.png"), width = 6.5, height = 2,  units = "in")
 
 rm(san_key_plot)
 
@@ -233,7 +238,7 @@ abun_tested_genus %>%
   filter(Tax == "Genus") %>% 
   mutate(tested = factor(tested, levels = rev(c("Not tested", 
                                                 "Insignificant", "Increase", "Decrease"))),
-         Plant = factor(Plant, levels = c("Aalborg West", "Ejby Mølle",
+         Plant = factor(Plant, levels = c("Aalborg West", "Ejby MÃ¸lle",
                                           "Esbjerg West", "Randers" 
          )),
          p = cumsum(mean_abun) - (0.5 * mean_abun)) %>%
@@ -277,10 +282,10 @@ ggsave(paste0(OutputPath, "plots/results/stackedbar_cum_abun_genus.png"), width 
 # Figure 7 + S9: Fold change
 ###################################
 
-source(paste0(SourcePath, "fold_change_plot.R"))
+source(paste0(SourcePath, "/fold_change_plot.R"))
 
 plot_article
-ggsave(paste0(OutputPath, "plots/results/foldchange.png"), width = 8.5, height = 8.8,  units = "in")
+ggsave(paste0(OutputPath, "plots/results/foldchange_new_textsize.png"), width = 8.5, height = 8.8,  units = "in")
 
 plot_supplementary
 ggsave(paste0(OutputPath, "plots/supplementary_results/foldchange_common.png"), width = 8.8, height = 10,  units = "in")

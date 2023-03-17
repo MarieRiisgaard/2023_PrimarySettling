@@ -18,10 +18,10 @@ pacman::p_load(tidyverse,
 # Timeline over samples
 samples <- data[[3]] %>% 
   mutate(Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers")),
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers")),
          Plant = fct_rev(Plant)) %>% 
   distinct(SampleID, Date_rawdata, Plant) %>% 
-  #filter(Plant != "Ejby Mølle") %>% 
+  #filter(Plant != "Ejby MÃ¸lle") %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata)) %>% 
   #group_by(Plant, PrimarySettler, Location, Date_rawdata) %>% 
   #summarise(n_samples = n(), .groups = "drop") %>%  
@@ -55,7 +55,7 @@ samples2 <-
   data[[3]] %>% 
   distinct(Date_rawdata, Plant) %>% 
   mutate(Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers")), 
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers")), 
          Plant = fct_rev(Plant)) %>% 
   group_by(Plant) %>% 
   summarise(n_samples = n(), .groups = "drop") %>% 
@@ -87,11 +87,11 @@ samples2 <-
 
 #Make map over WWTP
 plant_coordinates <- tibble(
-  Plant = c("Aalborg West", "Randers", "Ejby Mølle", "Esbjerg West"), 
+  Plant = c("Aalborg West", "Randers", "Ejby MÃ¸lle", "Esbjerg West"), 
   lon = c(57.04801344945664, 56.45395355374147, 55.3975822511686, 55.488027086861095),
   lat = c(9.865426704108463, 10.07086020271391, 10.417051385497906, 8.430713970155672)) %>% 
   mutate(Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers")))
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers")))
 
 map_limits <- c(8, 54.74, 11.25, 57.8)
 map <- ggmap::ggmap(ggmap::get_stamenmap(map_limits, zoom = 9,  maptype = "toner-lite"))
@@ -191,7 +191,7 @@ correlation_data <- data[[2]] %>%
   filter(!is.na(COD_afterPS)) %>% 
   filter(!is.na(COD_beforePS)) %>% 
   mutate(Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers")),
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers")),
   ) %>% 
   ungroup() %>%  
   select(Plant, Date_rawdata, 
@@ -208,7 +208,7 @@ flow <-
          p_dry_weather = Flow_beforePS_m3/dry_flow*100, 
   ) %>% 
   mutate(Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers"))) %>% 
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers"))) %>% 
   ggplot(aes(y = Flow_beforePS_m3, x = Plant, fill = Plant)) + 
   geom_boxplot(outlier.shape = NA, alpha = 0.6) + 
   geom_jitter(shape = 21, size =0.8, alpha = 0.7, color = "black",
@@ -373,10 +373,10 @@ rm(design, flow, COD, coor_plot, check_normality, x_lab, y_lab, correlation_data
 
 # Dimentions of primary settlers 
 V = tibble(
-  Plant = c("Randers",      "Ejby Mølle", "Esbjerg West",   "Aalborg West"), 
+  Plant = c("Randers",      "Ejby MÃ¸lle", "Esbjerg West",   "Aalborg West"), 
   v =     c(3*1425,          7*1200,       2*1046,           2*1900), 
   s =     c(3*3.14*13.25^2 - (3*3.14*2.55^2),  #Randers
-            7*58*8,                          #Ejby Mølle"
+            7*58*8,                          #Ejby MÃ¸lle"
             2*3.14*12.5^2 - (2*3.14*4^2),      # Esbjerg
             2*7.7*52.5))                       # Aalborg
 
@@ -385,7 +385,7 @@ plant_parameters <- data[[2]] %>%
   left_join(., V, by = c("Plant")) %>% 
   group_by(Plant, v, Date_rawdata) %>% 
   mutate(Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers"))) %>% 
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers"))) %>% 
   summarise(res = (v)/(Flow_beforePS_m3)*24, 
             SOR = Flow_beforePS_m3/s/24)
 
@@ -562,7 +562,7 @@ rank_abundance <- function(plant){
 
 p1 <-rank_abundance("Aalborg West")
 p2 <-rank_abundance("Esbjerg West")
-p3 <-rank_abundance("Ejby Mølle")
+p3 <-rank_abundance("Ejby MÃ¸lle")
 p4 <-rank_abundance("Randers")
 
 p1 + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
@@ -602,7 +602,7 @@ plot_functional_guild_tax <- function(data, tax_level = Genus, rel_abun_tax = re
     mutate(samples = map(samples, ~ 
                            distinct(., {{tax_level}}, {{rel_abun_tax}}, Genus))) %>%   ## Unnester
     unnest(samples) %>% 
-    mutate(Plant = factor(Plant, levels = c("Aalborg West", "Ejby Mølle","Esbjerg West", "Randers"))) %>% 
+    mutate(Plant = factor(Plant, levels = c("Aalborg West", "Ejby MÃ¸lle","Esbjerg West", "Randers"))) %>% 
     group_by(across(c({{tax_level}}, Plant))) %>% 
     summarise(median = median({{rel_abun_tax}}), .groups = "drop", Plant, Genus) %>%  ##Mean cross all samples
     distinct() %>% 
@@ -721,10 +721,8 @@ tibble(x = c(0,1), y=c(0,1)) %>%
         legend.box = "vertical")
 
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/heatmap_top_abun_genus_influent.png"), 
+ggsave(paste0(OutputPath, "plots/supplementary_results/heatmap_top_abun_genus_influent_newEM.png"), 
        width = 4, height = 5, units = "in")
-
-
 
 
 #############################################################
@@ -733,8 +731,9 @@ ggsave(paste0(OutputPath, "plots/supplementary_results/heatmap_top_abun_genus_in
 
 #Ordinations: seanonallity investigation 
 
-source(paste0(SourcePath, "PCA_plots.R"))
+source(paste0(SourcePath, "/PCA_plots.R"))
 
+amp_merged_species = data[[4]]
 before <- ggplot() + 
   scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
   geom_richtext(aes(x = 0.5, y = 0.35, 
@@ -765,11 +764,11 @@ EB <- tibble(x = c(0,1), y=c(0,1)) %>%
   ggplot() + 
   scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
   geom_richtext(aes(x = 0.5, y = 0.35, 
-                    label = paste0("__Ejby Mølle__<br>(n=29)")), size=12, fill = NA, label.color = NA, lineheight = 0.35) + 
+                    label = paste0("__Ejby MÃ¸lle__<br>(n=29)")), size=12, fill = NA, label.color = NA, lineheight = 0.35) + 
   theme_void() 
-D <- plot_each_influent_stream("Ejby Mølle", "s_", amp_merged_species, c("Before"))
-E <- plot_each_influent_stream("Ejby Mølle", "s_", amp_merged_species, c("After"))
-Fi <- plot_each_influent_stream("Ejby Mølle", "s_", amp_merged_species, c("Before", "After"))
+D <- plot_each_influent_stream("Ejby MÃ¸lle", "s_", amp_merged_species, c("Before"))
+E <- plot_each_influent_stream("Ejby MÃ¸lle", "s_", amp_merged_species, c("After"))
+Fi <- plot_each_influent_stream("Ejby MÃ¸lle", "s_", amp_merged_species, c("Before", "After"))
 
 ESW <- tibble(x = c(0,1), y=c(0,1)) %>% 
   ggplot() + 
@@ -810,7 +809,7 @@ ggplot() + theme_void() +
         #legend.direction = "vertical"
   )  
 
-ggsave(paste0(OutputPath, "supplementary_results/seasonal_PCoA.png"), 
+ggsave(paste0(OutputPath, "plots/supplementary_results/seasonal_PCoA_astro_new_ejbymolle.png"), 
        width = 6.5, height = 8)
 
 rm(before, after, both, AAW, A, B, C,EB,D,E,Fi,ESW, G, H, I, Ran,J,K,L) 
@@ -867,7 +866,7 @@ merged %>%
   group_by(Plant, PrimarySettler, Tax) %>% 
   mutate(tested = factor(tested, levels = rev(c("Not tested", 
                                                 "Insignificant", "Increase", "Decrease"))),
-         Plant = factor(Plant, levels = c("Aalborg West", "Ejby Mølle",
+         Plant = factor(Plant, levels = c("Aalborg West", "Ejby MÃ¸lle",
                                           "Esbjerg West", "Randers" 
          )),
          p = cumsum(mean_abun) - (0.5 * mean_abun)) %>%
@@ -985,11 +984,11 @@ plantpair_ambigous_species <- function(plant_pair){
 }
 
 ambigous_species_count <- rbind(
-  plantpair_ambigous_species(c("Aalborg West", "Ejby Mølle")),
+  plantpair_ambigous_species(c("Aalborg West", "Ejby MÃ¸lle")),
   plantpair_ambigous_species(c("Aalborg West", "Esbjerg West")),
-  plantpair_ambigous_species(c("Esbjerg West", "Ejby Mølle")),
+  plantpair_ambigous_species(c("Esbjerg West", "Ejby MÃ¸lle")),
   plantpair_ambigous_species(c("Randers", "Aalborg West")), 
-  plantpair_ambigous_species(c("Randers", "Ejby Mølle")), 
+  plantpair_ambigous_species(c("Randers", "Ejby MÃ¸lle")), 
   plantpair_ambigous_species(c("Randers", "Esbjerg West"))
 )
 
@@ -1000,9 +999,9 @@ ambigous_species_count %>%
     str_detect(Sign, "Insigni") ~ "Insignificant in one or both", 
     Sign %in% c("Increase-Decrease", "Decrease-Increase") ~ "Inconsistent trend"
   ), 
-  Plant_pair = factor(Plant_pair, levels = c("Aalborg West-<br>Ejby Mølle", "Aalborg West-<br>Esbjerg West", 
-                                             "Esbjerg West-<br>Ejby Mølle", "Randers-<br>Aalborg West", 
-                                             "Randers-<br>Ejby Mølle", "Randers-<br>Esbjerg West"
+  Plant_pair = factor(Plant_pair, levels = c("Aalborg West-<br>Ejby MÃ¸lle", "Aalborg West-<br>Esbjerg West", 
+                                             "Esbjerg West-<br>Ejby MÃ¸lle", "Randers-<br>Aalborg West", 
+                                             "Randers-<br>Ejby MÃ¸lle", "Randers-<br>Esbjerg West"
   )),
   Sign = factor(Sign, levels = c("Increase-Increase", "Decrease-Decrease", "Increase-Decrease", "Decrease-Increase",
                                  "Decrease-Insignificant", "Increase-Insignificant", "Insignificant-Decrease", 

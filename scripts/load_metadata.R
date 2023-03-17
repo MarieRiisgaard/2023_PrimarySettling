@@ -23,8 +23,8 @@ tidy_meta <- metadata %>%
 d_COD_1 <- read_xlsx(
   path = paste0(DataPath, "WWTP_metadata","/AalborgWest_Dataindsamling 2018 til 2020.xlsx"), 
   sheet = "Sheet1") %>% 
-  rename("Date_rawdata" = "Fra") %>% #, "Døgnflow_m3_before" = "Døgnflow_m3", "COD_mg_L_before" = "COD_mg_L") %>% 
-  select(-Til, -Timeflow_m3_h, -Døgnflow_m3) %>% 
+  rename("Date_rawdata" = "Fra") %>% #, "DÃ¸gnflow_m3_before" = "DÃ¸gnflow_m3", "COD_mg_L_before" = "COD_mg_L") %>% 
+  select(-Til, -Timeflow_m3_h, -DÃ¸gnflow_m3) %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata) %>% format("%Y-%m-%d")) %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata))
 
@@ -47,7 +47,7 @@ d_flow <-  read_xlsx(
 d_flow_AAW <- d_flow %>% 
   full_join(., d_COD_1 %>%
               pivot_wider(names_from = PrimarySettler, values_from = COD_mg_L)) %>% 
-  rename("COD_beforePS" = "Before", "COD_afterPS" = "After", "Precipitation_mm" = "Nedbør_mm")
+  rename("COD_beforePS" = "Before", "COD_afterPS" = "After", "Precipitation_mm" = "NedbÃ¸r_mm")
   
 
 rm(d_COD, d_COD_1, d_flow)
@@ -58,17 +58,17 @@ rm(d_COD, d_COD_1, d_flow)
 
 ## Read flow_data and removes data with no date
 d_flow <- read_xlsx(
-  path = paste0(DataPath, "WWTP_metadata","/Randers_indløbs_flow.xlsx"), 
+  path = paste0(DataPath, "WWTP_metadata","/Randers_indlÃ¸bs_flow.xlsx"), 
   skip = 7) %>% 
-  select(-...2, -...3, -...4, -Beskrivelse) %>% slice(n = 4:n()) %>% 
+  select(-...2, -...3, -...4, -Beskrivelse) %>% slice(4:nrow(.)) %>% 
   mutate(...8 = as.Date(...8)) %>% rename("Date_rawdata" = "...8") %>% 
   mutate(Plant = "Randers", 
-         Flow_nord = as.numeric(`Flowmåling Nord 2 (F_CV)`), 
-         Flow_syd= as.numeric(`Flowmåler syd (F_CV)`), 
-         Flow_vest = as.numeric(`Flowmåling Vest (F_CV)`), 
+         Flow_nord = as.numeric(`FlowmÃ¥ling Nord 2 (F_CV)`), 
+         Flow_syd= as.numeric(`FlowmÃ¥ler syd (F_CV)`), 
+         Flow_vest = as.numeric(`FlowmÃ¥ling Vest (F_CV)`), 
          Flow_beforePS_m3 = Flow_vest + Flow_syd + Flow_nord, 
          Flow_afterPS_m3 = as.numeric("NA")) %>%
-  select(-`Flowmåling Nord 2 (F_CV)`, -`Flowmåler syd (F_CV)`, -`Flowmåling Vest (F_CV)`) %>% 
+  select(-`FlowmÃ¥ling Nord 2 (F_CV)`, -`FlowmÃ¥ler syd (F_CV)`, -`FlowmÃ¥ling Vest (F_CV)`) %>% 
   filter(!is.na(Date_rawdata))
 
 # Read COD data
@@ -112,7 +112,7 @@ d_COD_1 <- d_COD %>%  # Pivot longer with flows by location
   select(Date_rawdata, Plant, Flow_nord, Flow_syd, Flow_vest, week_year) %>% 
   pivot_longer(cols = c(Flow_nord, Flow_syd, Flow_vest), values_to = "flow_loc_m3", names_to = "LocationBeforeSettler") %>% 
   mutate(LocationBeforeSettler = if_else(LocationBeforeSettler == "Flow_nord", "NV", LocationBeforeSettler), 
-         LocationBeforeSettler = if_else(LocationBeforeSettler == "Flow_syd", "SØ", LocationBeforeSettler), 
+         LocationBeforeSettler = if_else(LocationBeforeSettler == "Flow_syd", "SÃ˜", LocationBeforeSettler), 
          LocationBeforeSettler = if_else(LocationBeforeSettler == "Flow_vest", "SV", LocationBeforeSettler)) %>% 
   filter(!is.na(flow_loc_m3)) %>% 
   mutate(PrimarySettler = "Before")
@@ -122,7 +122,7 @@ d_COD_2 <- d_COD %>%  # Pivot longer with COD by location
   select(Date_rawdata, Plant, week_year, COD_nord, COD_syd, COD_vest) %>% 
   pivot_longer(cols = c(COD_nord, COD_syd, COD_vest), values_to = "COD_loc_mg_L", names_to = "LocationBeforeSettler") %>% 
   mutate(LocationBeforeSettler = if_else(LocationBeforeSettler == "COD_nord", "NV", LocationBeforeSettler), 
-         LocationBeforeSettler = if_else(LocationBeforeSettler == "COD_syd", "SØ", LocationBeforeSettler), 
+         LocationBeforeSettler = if_else(LocationBeforeSettler == "COD_syd", "SÃ˜", LocationBeforeSettler), 
          LocationBeforeSettler = if_else(LocationBeforeSettler == "COD_vest", "SV", LocationBeforeSettler)) %>% 
   select(-Date_rawdata) %>% 
   group_by(week_year, Plant, LocationBeforeSettler) %>%
@@ -157,7 +157,7 @@ tidy_meta_Ran <- full_join(tidy_meta %>% filter(Plant == "Randers") %>%
                            mutate(LocationBeforeSettler = factor(LocationBeforeSettler)), 
                          d_COD_3) %>% filter(!is.na(SampleID)) 
 
-rm(d_COD, d_COD_1, d_COD_2, d_flow, d_COD_3)
+rm(d_COD, d_COD_1, d_COD_2, d_flow)
 
 
 ##############################
@@ -167,15 +167,15 @@ rm(d_COD, d_COD_1, d_COD_2, d_flow, d_COD_3)
 
 ## All dates 
 d_flow_EsW <- read_xlsx(
-  path = paste0(DataPath, "WWTP_metadata","/EsbjergWest-monthly_Bio-Immigration - Aalborg Uni rådata.xlsx"), 
-  sheet = "Rådata") %>% 
+  path = paste0(DataPath, "WWTP_metadata","/EsbjergWest-monthly_Bio-Immigration - Aalborg Uni rÃ¥data.xlsx"), 
+  sheet = "RÃ¥data") %>% 
   rename("Date_rawdata" = "Dato", 
-        "Flow_beforePS_m3" = "Flow - Indløb (m³/d)", 
-        "Flow_afterPS_m3" = "Flow, BioInd (m³/d)", 
-        "Precipitation_mm" = "Nedbør - Indløb (mm)", 
-        "COD_beforePS" = "COD - Indløb (mg/l)", 
+        "Flow_beforePS_m3" = 2, 
+        "Flow_afterPS_m3" = 5, 
+        "Precipitation_mm" = "NedbÃ¸r - IndlÃ¸b (mm)", 
+        "COD_beforePS" = "COD - IndlÃ¸b (mg/l)", 
         "COD_afterPS" = "COD - BioInd (mg/l)" ) %>% 
-  select(-`V.S.S., - Bio (kg/m³)`) %>% 
+  select(-7) %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata) %>% format("%Y-%m-%d")) %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata), 
          Plant = "Esbjerg West", 
@@ -183,11 +183,11 @@ d_flow_EsW <- read_xlsx(
 
 ## All dates pH data
 d_pH_EsW <- read_xlsx(
-  path = paste0(DataPath, "WWTP_metadata","/Esbjerg_West_pH_målinger.xlsx"), 
+  path = paste0(DataPath, "WWTP_metadata","/Esbjerg_West_pH_mÃ¥linger.xlsx"), 
   sheet = "Ark1") %>% 
   rename("Date_rawdata" = "Dato", 
-         "pH_BeforePS" = "pH - Indløb", 
-         "COD_beforePS" = "COD - Indløb (mg/l)", 
+         "pH_BeforePS" = "pH - IndlÃ¸b", 
+         "COD_beforePS" = "COD - IndlÃ¸b (mg/l)", 
          "COD_afterPS" = "COD - BioInd (mg/l)" ) %>% 
   select(Date_rawdata, pH_BeforePS) %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata), 
@@ -215,11 +215,11 @@ tidy_meta_EsW <- d_flow_EsW %>%
 
 
 ##############################
-#     Ejby Mølle              #
+#     Ejby MÃ¸lle              #
 ##############################
 
 d_Ejby_2019 <- read_xlsx(
-  path = paste0(DataPath, "WWTP_metadata","/MIDAS data Ejby Mølle 2019.xlsx"), 
+  path = paste0(DataPath, "WWTP_metadata","/MIDAS data Ejby MÃ¸lle 2019.xlsx"), 
   sheet = "Dag") %>% 
   select("Date_rawdata" = "Date", 
          "Flow_beforePS_m3" = "Inflent_to_plant (m3/day)",
@@ -230,10 +230,10 @@ d_Ejby_2019 <- read_xlsx(
          "pH_BeforePS" = "pH_Influent_to_plant", 
          "Iron_dosage_beforePS" = "Iron_dosage_Influent_to_plant") %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata), 
-         Plant = "Ejby Mølle")
+         Plant = "Ejby MÃ¸lle")
 
 d_Ejby_2020 <- read_xlsx(
-  path = paste0(DataPath, "WWTP_metadata","/MIDAS data Ejby Mølle 2020.xlsx"), 
+  path = paste0(DataPath, "WWTP_metadata","/MIDAS data Ejby MÃ¸lle 2020.xlsx"), 
   sheet = "Dag")%>% 
   select("Date_rawdata" = "Date", 
          "Flow_beforePS_m3" = "Inflent_to_plant",
@@ -244,7 +244,7 @@ d_Ejby_2020 <- read_xlsx(
          "pH_BeforePS" = "pH_Influent_to_plant", 
          "Iron_dosage_beforePS" = "Iron_dosage_Influent_to_plant") %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata), 
-         Plant = "Ejby Mølle")
+         Plant = "Ejby MÃ¸lle")
 
 d_Ejby_2019 <- rbind(d_Ejby_2019, d_Ejby_2020)
 
@@ -306,7 +306,7 @@ DMI_ejbymolle_df <- rename(DMI_ejbymolle_df, DateTime = X1, Rainfall = X2)
 DMI_ejbymolle_df <- DMI_ejbymolle_df %>% 
   mutate(Rainfall = as.numeric(sub(",", ".", Rainfall, fixed = TRUE)), 
          DateTime = as.Date(DateTime, format ="%Y-%m-%d"), 
-         Plant = "Ejby Mølle")
+         Plant = "Ejby MÃ¸lle")
 
 
 DMI <- rbind(DMI_randers_df, DMI_aalborg_df, DMI_esbjerg_df, DMI_ejbymolle_df) %>% 

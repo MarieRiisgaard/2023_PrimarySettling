@@ -247,7 +247,7 @@ plot_all_influent_streams <- function(amp_object, primary_settler = c("Before"))
                           #                      vjust = 1, nrow = 2, order = 1
       ))
   
-  plot[["layers"]][[3]][["data"]][["Name"]] = c("Ejby Mølle",
+  plot[["layers"]][[3]][["data"]][["Name"]] = c("Ejby M?lle",
                                                 "Esbjerg West",
                                                 "Randers",     
                                                 "Aalborg West")
@@ -256,8 +256,28 @@ plot_all_influent_streams <- function(amp_object, primary_settler = c("Before"))
   
 }
 
-plant = "Aalborg West"
-env_factor = "s_"
+
+
+
+#################################################
+#### Season plot function #####################
+############################################
+
+# function from https://newbedev.com/determine-season-from-date-using-lubridate-in-r
+# the season cut dates (in the form MMDD) are based on the astronomical seasons. 
+# correlates better with the process tank temperature profile than cutting by months.
+getSeason <- function(input.date){
+  numeric.date <- 100*month(input.date)+day(input.date)
+  cuts <- base::cut(numeric.date, breaks = c(0,320,0621,0923,1222,1231))
+  levels(cuts) <- c("Winter","Spring","Summer","Autumn","Winter")
+  return(cuts)
+}
+
+
+
+# plant = "Aalborg West"
+# env_factor = "s_"
+# primarysettler = "Before"
 
 plot_each_influent_stream <- function(plant, env_factor, amp_object, primarysettler){ 
   
@@ -273,16 +293,19 @@ plot_each_influent_stream <- function(plant, env_factor, amp_object, primarysett
   
   
   samples$metadata <- samples$metadata %>% 
-    mutate(Season = season(Date_rawdata)) %>% 
+    #mutate(Season = season(Date_rawdata)) %>% 
+    mutate(Season = getSeason(Date_rawdata)) %>% 
     select(SampleID, Plant, PrimarySettler, Date_rawdata, Season) %>% 
     mutate(month = month(Date_rawdata),
            date_num = as.numeric(month),
            month_fct = as.factor(month),
            month_names = month(Date_rawdata, label = T, abbr = T), 
            s_ = factor(Season, 
-                       levels = c("DJF", "MAM", "JJA", "SON"),
-                       labels = c("Winter", "Spring", "Summer", "Autumn")
-           )) %>% 
+                       levels = c("Winter","Spring","Summer","Autumn")
+                       #levels = c("DJF", "MAM", "JJA", "SON"),
+                       #labels = c("Winter", "Spring", "Summer", "Autumn"
+                      )
+           ) %>% 
     rename("PS_" = "PrimarySettler")
   
   paired_samples <-  
@@ -301,11 +324,18 @@ plot_each_influent_stream <- function(plant, env_factor, amp_object, primarysett
     amp_subset_samples(PS_ %in% primarysettler) %>% 
     amp_subset_samples(SampleID %in% paired_samples)
   
+  
+  #rows_with_values_greater_than_001 <- apply(plot_df$abund > 0.01, 1, any)
+  #tax <- rownames(plot_df$abund[rows_with_values_greater_than_001, ])
+  
+  
   plot <- plot_df %>% 
+    #amp_subset_taxa(tax_vector = tax) %>% 
     amp_ordinate(sample_color_by = env_factor, 
                  transform = "none", 
                  distmeasure = "bray", 
-                 filter_species = 0.01, envfit_signif_level = 0.1,
+                 filter_species = 0.01, 
+                 #envfit_signif_level = 0.1,
                  type = "pcoa", 
                  #sample_shape_by = "Plant", 
                  sample_point_size = 1, 
@@ -345,7 +375,7 @@ plot_each_influent_stream <- function(plant, env_factor, amp_object, primarysett
           axis.ticks = element_line(size = 0.01), 
           plot.title = element_markdown(size = 24, color = "black", 
                                         margin=margin(),lineheight = 0.0001),
-          panel.grid.major = element_line(size = 0.05), 
+          panel.grid.major = element_line(linewidth = 0.05), 
           panel.grid.minor = element_blank()
     ) +
     guides(#shape = "none", 
@@ -367,7 +397,7 @@ plot_each_influent_stream <- function(plant, env_factor, amp_object, primarysett
       # )
     )
   
-  # plot[["layers"]][[3]][["data"]][["Name"]] = c("Ejby Mølle",
+  # plot[["layers"]][[3]][["data"]][["Name"]] = c("Ejby M?lle",
   #                                               "Esbjerg West",
   #                                               "Randers",     
   #                                               "Aalborg West")

@@ -2,16 +2,12 @@
 #  Run this script first to generate the different dataframes
 #############################################################################
 
-
-
-memory.limit(20000)
-
 #Packages
-library(metR) # Season function 
-library(ampvis2)
-library(readxl)
-library(vroom) # Load DMI data
-library(tidyverse)
+#library(metR) # Season function 
+pacman::p_load(ampvis2,
+               readxl, 
+               vroom, 
+               tidyverse)
 
 ############################################################################
 #   Load data and Filter
@@ -19,6 +15,15 @@ library(tidyverse)
 
 metadata = read_xlsx(paste0(DataPath, "sequencing_data/metadata.xlsx"))
 
+# function from https://newbedev.com/determine-season-from-date-using-lubridate-in-r
+# the season cut dates (in the form MMDD) are based on the astronomical seasons. 
+# correlates better with the process tank temperature profile than cutting by months.
+getSeason <- function(input.date){
+  numeric.date <- 100*month(input.date)+day(input.date)
+  cuts <- base::cut(numeric.date, breaks = c(0,320,0621,0923,1222,1231))
+  levels(cuts) <- c("Winter","Spring","Summer","Autumn","Winter")
+  return(cuts)
+}
 
 ## Filter samples that I suspect has been mixmatched
 filter_samples <- c("MQ200420-49", ## Aalborg West --> cluster with negative
@@ -60,7 +65,8 @@ master_function <- function(
   d <- amp_load(otutable = paste0(DataPath, "sequencing_data/ASVtable_notax.tsv"), 
                 metadata = metadata,
                 taxonomy = paste0(DataPath, "sequencing_data/ASVs.R1.sintax"))
- randers_samples <- d %>% 
+  
+  randers_samples <- d %>% 
    amp_subset_samples(Plant == "Randers", minreads = reads_randers) 
  others_samples <- d %>% 
    amp_subset_samples(Plant != "Randers", minreads = reads_other) 
@@ -102,7 +108,7 @@ d_min_non_merged <- d
 # Load meta data
 print(paste0("Load metadate: ", metadata_load))
 if (metadata_load == T) {
-  source(file = paste0(SourcePath, "load_metadata.R"), echo = F, verbose = F)
+  source(file = paste0(SourcePath, "/load_metadata.R"), echo = F, verbose = F)
 } else {
   d <- d
 }
@@ -149,7 +155,7 @@ d <- amp_merge_ampvis2(d1, d2, by_refseq = F)
 ## Merge Randers samples 
 print(paste0("Merge influent streams for Randers: ", merge_influent_streams))
 if (merge_influent_streams == T) {
-  source(file = "scripts/scripts_data_2019/randers_flow_prop_mean.R")
+  source(file = paste0(SourcePath, "/flow_proportinal_mean.R"))
   d <- randers_prop_flow(d)
   rm(randers_prop_flow)
 } else {
@@ -189,7 +195,7 @@ d_min_read$tax <- d_min_read$tax %>%
 ### Introducing growth group and guilds
 ####################################################################################
 
-growth <- read_xlsx(path = "data/Presettling_data_20210916/growth_in_bio_tank.xlsx") %>% 
+growth <- read_xlsx(path = paste0(DataPath, "growth_groups_dottorini_2021/growth_in_bio_tank.xlsx")) %>% 
   select(Species_rename, growth_group_assignment, Guild) %>% 
   rename(Species = Species_rename)
 
@@ -260,7 +266,7 @@ tidy_plant <- function(plant){
 
 tidy_Randers <- tidy_plant("Randers")
 tidy_Esbjerg_W <- tidy_plant("Esbjerg West")
-tidy_Ejby_Molle <- tidy_plant("Ejby Mølle")
+tidy_Ejby_Molle <- tidy_plant("Ejby MÃ¸lle")
 tidy_Aalborg_W <- tidy_plant("Aalborg West")
 tidy_all <- rbind(tidy_Randers, tidy_Esbjerg_W, tidy_Ejby_Molle, tidy_Aalborg_W)
 tidy_all <- tidy_all %>% mutate(PrimarySettler = factor(PrimarySettler, 
@@ -280,7 +286,7 @@ tidy_meta <- tidy_all %>%
   select(SampleID, Plant, Location, PrimarySettler, Date_rawdata) %>% 
   mutate(Date_rawdata = as.Date(Date_rawdata)) %>% 
   left_join(., d_meta_by_date) %>% 
-  mutate(Season = season(Date_rawdata), 
+  mutate(Season = getSeason(Date_rawdata), 
          Date_numeric = as.numeric(Date_rawdata))
 
 # Load new metadata in ampvis dataframe
@@ -300,9 +306,9 @@ tidy_meta <- tidy_all %>% select(-samples)
 ## Merging relative abundance at the species level:
 #######################################################
 
-species_abun_tab <- data[[1]]$abund %>% 
+species_abun_tab <- d_min_read$abund %>% 
   rownames_to_column("OTU") %>% 
-  left_join(data[[1]]$tax, by = "OTU") %>% 
+  left_join(d_min_read$tax, by = "OTU") %>% 
   relocate(OTU,Kingdom, Phylum, Class, Order, Family, Genus, Species) %>% 
   mutate(OTU_no = OTU, 
          OTU = Species) %>% 
@@ -314,16 +320,24 @@ species_abun_tab <- data[[1]]$abund %>%
 
 amp_merged_species <- 
   amp_load(otutable = species_abun_tab,
-           metadata = data[[1]]$metadata) %>% 
+           metadata = d_min_read$metadata) %>% 
   amp_subset_samples(normalise = T)
+
+
+amp_merged_species$metadata <- amp_merged_species$metadata %>% 
+  mutate(PrimarySettler = factor(PrimarySettler, 
+                                 levels = c("before", "after"), 
+                                 labels = c("Before", "After")))
 
 
 ###############################################################################################
 # 
 ###############################################################################################
 
-list(d_min_read, d_meta_by_date, tidy_all, amp_merged_species, d_min_non_merged)
+data <- list(d_min_read, d_meta_by_date, tidy_all, amp_merged_species, d_min_non_merged)
 
+
+data
 }
 
 

@@ -15,7 +15,7 @@ SourcePath <- "C:/Users/marie/Desktop/visual_studio_code/2023_PrimarySettling/sc
 #################################################
 
 #Load workspace back to RStudio
-load(paste0(OutputPath, "R_environments/","Environment_20221025.RData"))
+load(paste0(OutputPath, "R_environments/","Environment_20230315.RData"))
 
 # Generate dataframe from scratch 
 # source(paste0(SourcePath, "load_data.R"))
@@ -50,10 +50,10 @@ data_species_all_samples <-
 
 ## Plant parameters 
 V = tibble(
-  Plant = c("Randers",      "Ejby Mølle", "Esbjerg West",   "Aalborg West"), 
+  Plant = c("Randers",      "Ejby MÃ¸lle", "Esbjerg West",   "Aalborg West"), 
   v =     c(3*1425,          7*1200,       2*1046,           2*1900), 
   s =     c(3*3.14*13.25^2 - (3*3.14*2.55^2),  #Randers
-            7*58*8,                          #Ejby Mølle"
+            7*58*8,                          #Ejby M?lle"
             2*3.14*12.5^2 - (2*3.14*4^2),      # Esbjerg
             2*7.7*52.5))                       # Aalborg
 
@@ -63,7 +63,7 @@ plant_parameters <- data[[2]] %>%
   left_join(., V, by = c("Plant")) %>% 
   group_by(Plant, v, Date_rawdata) %>% 
   mutate(Plant = factor(Plant, 
-                        levels = c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers"))) %>% 
+                        levels = c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers"))) %>% 
   summarise(res = (v)/(Flow_beforePS_m3)*24, 
             SOR = Flow_beforePS_m3/s/24)
 
@@ -123,23 +123,24 @@ diff_all <- data[[3]] %>%
   left_join(., data[[2]], by = c("Date_rawdata", "Plant"))  ## Add temperature
 
 diff_mean <- diff_all %>% 
-  group_by(Plant, Genus) %>% 
+  rename("p_adjust_wilcox" = "p_adjust") %>% 
+  group_by(Plant, Genus, p_adjust_wilcox) %>% 
   summarise(mean_diff = (mean(diff)), .groups = "drop")
 
 ## Correlation mean differnece to SOR 
 corr_diff_SOR <- diff_all %>% 
   group_by(Plant, Genus, Sign) %>% 
-  summarize(correlation_with_SOR = stats::cor.test(diff, SOR, method = "spearman")$estimate,
+  summarize(correlation_coeff_SOR = stats::cor.test(diff, SOR, method = "spearman")$estimate,
             pval = stats::cor.test(diff, SOR, method = "spearman")$p.value,
             .groups = "drop") %>%
   group_by(Plant) %>% 
-  mutate(p_adjust = p.adjust(pval, method = "BH"), 
-         p_adjust = ifelse(p_adjust >= 0.05, NA, p_adjust),
-         correlation_with_SOR = ifelse(p_adjust >= 0.05, NA, correlation_with_SOR))%>% 
+  mutate(p_adjust_SOR = p.adjust(pval, method = "BH"), 
+         #p_adjust_SOR = ifelse(p_adjust_SOR >= 0.05, NA, p_adjust_SOR),
+         correlation_coeff_SOR = ifelse(p_adjust_SOR >= 0.05, NA, correlation_coeff_SOR))%>% 
   select(-pval)
   
 
-corr_diff_SOR %>% filter(p_adjust < 0.05) %>% group_by(Plant) %>%  summarise(n())
+corr_diff_SOR %>% filter(p_adjust_SOR < 0.05) %>% group_by(Plant) %>%  summarise(n())
 
 
 ## Mean relative abundance  before and after (genus level)

@@ -28,9 +28,9 @@ samples <- data[[3]] %>%
   ggplot(aes(x = Date_rawdata, y = Plant, fill = Plant)) + 
   geom_point(size = 2, shape = 21) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
-  theme_xaringan(css_file = "xaringan-themer.css") +
+  #theme_xaringan(css_file = "xaringan-themer.css") +
   #scale_xaringan_color_discrete() +  
-  scale_xaringan_fill_discrete() +
+  #scale_xaringan_fill_discrete() +
   scale_fill_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
   xlab("Date") +
   theme(
@@ -43,10 +43,11 @@ samples <- data[[3]] %>%
     legend.title = element_markdown(size = 15),
     axis.title = element_blank(), 
     axis.ticks.x = element_line(color = "black", linewidth = 0.2),
-    axis.ticks.y = element_blank(),
-    axis.line.x = element_line(color = "black", linewidth = 0.2),
-    panel.grid.major = element_line(linewidth = 0.2), 
-    panel.grid.minor = element_blank()
+    axis.ticks.y = element_line(color = "black", linewidth = 0.2),
+    axis.line = element_line(color = "black", linewidth = 0.2),
+    panel.grid.major = element_line(linewidth = 0.2, color = "grey80"),
+    panel.grid.minor.x =element_line(linewidth = 0.2, color = "grey80"),
+    panel.background = element_rect(fill = "white")
   ) +
   guides(fill = "none") 
 
@@ -63,10 +64,11 @@ samples2 <-
   geom_col() + 
   geom_label(aes(label = n_samples, x = 10), size = 8,color = "black", fill = "grey80" ) +
   #scale_xaringan_color_discrete() +  
-  scale_xaringan_fill_discrete() +
-  theme_xaringan(css_file = "xaringan-themer.css") +
+  #scale_xaringan_fill_discrete() +
+  #theme_xaringan(css_file = "xaringan-themer.css") +
   scale_fill_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
   xlab("Number of sample pairs") +
+  scale_x_continuous(expand = c(0,0)) +
   theme(
     legend.position = "none",
     axis.text.y = element_markdown(size = 22, color = "black"),
@@ -78,10 +80,11 @@ samples2 <-
     legend.title = element_markdown(size = 15),
     axis.title = element_blank(), 
     axis.ticks.x = element_line(color = "black", linewidth = 0.2),
-    axis.ticks.y = element_blank(),
-    axis.line.x = element_line(color = "black", linewidth = 0.2),
-    panel.grid.major = element_line(linewidth = 0.2), 
-    panel.grid.minor = element_blank()
+    axis.ticks.y = element_line(color = "black"),
+    axis.line = element_line(color = "black", linewidth = 0.2),
+    panel.grid.major = element_line(linewidth = 0.2, color = "grey80"),
+    panel.grid.minor.x =element_line(linewidth = 0.2, color = "grey80"),
+    panel.background = element_rect(fill = "white")
   ) 
 
 
@@ -101,9 +104,9 @@ map <-
   geom_point(data = plant_coordinates, 
              aes(x = lat, y = lon, fill = Plant), shape = 21, size = 3, color = "black"
   ) + 
-  theme_xaringan(css_file = "xaringan-themer.css") +
-  scale_xaringan_fill_discrete() +
-  scale_xaringan_color_discrete() +
+  #theme_xaringan(css_file = "xaringan-themer.css") +
+  #scale_xaringan_fill_discrete() +
+  #scale_xaringan_color_discrete() +
   scale_fill_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
   geom_label_repel(data = plant_coordinates, 
                    aes(label = Plant, lat, lon, fill = Plant, color = Plant), seed = 123,
@@ -140,23 +143,24 @@ design <- c(
 
 tibble(x = c(0,1), y=c(0,1)) %>% 
   ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
-  geom_richtext(aes(x = 0.53, y = 0.93, label = "**A**"), size=24, fill = NA, label.color = NA) + 
+  geom_richtext(aes(x = 0.53, y = 0.93, label = "**A**"), size=20, fill = NA, label.color = NA) + 
   theme_void() + 
   samples +
   tibble(x = c(0,1), y=c(0,1)) %>% 
   ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
-  geom_richtext(aes(x = 0.53, y = 0.93, label = "**C**"), size=24, fill = NA, label.color = NA) + 
+  geom_richtext(aes(x = 0.53, y = 0.93, label = "**C**"), size=20, fill = NA, label.color = NA) + 
   theme_void() +
   map +
   tibble(x = c(0,1), y=c(0,1)) %>% 
   ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
-  geom_richtext(aes(x = 0.53, y = 0.93, label = "**B**"), size=24, fill = NA, label.color = NA) + 
+  geom_richtext(aes(x = 0.53, y = 0.93, label = "**B**"), size=20, fill = NA, label.color = NA) + 
   theme_void() +
   samples2 + 
-  plot_layout(ncol = 4, widths = c(0.3, 6, 0.3, 3), design = design) & theme(strip.placement = NULL)
+  plot_layout(ncol = 4, widths = c(0.3, 6, 0.3, 3), design = design) #& theme(strip.placement = NULL)
 
 
-ggsave(paste0(primarysettling_folder, "/output/plots/PrimarySettling_article/supplementary/map.png"), width = 8.5, height = 4)
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS1_map_", Sys.Date(),".png"), width = 8.5, height = 4)
+#ggsave(paste0(primarysettling_folder, "/output/plots/PrimarySettling_article/supplementary/map.png"), width = 8.5, height = 4)
 
 rm(map, plant_coordinates, map_limits, samples, samples2)
 
@@ -215,9 +219,9 @@ flow <-
               position = position_jitterdodge(jitter.width = 0.9), aes(fill = Plant)) +
   geom_point(aes(Plant, dry_flow), shape=95, size=40, color = "darkred") +
   facet_grid(~Plant, scales = "free_x") +
-  theme_xaringan(css_file = "xaringan-themer.css") +
-  scale_fill_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
-  scale_color_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
+  #theme_xaringan(css_file = "xaringan-themer.css") +
+  scale_fill_manual(values = rev(c("gray20", "#804600", "#6F8FAF", "gray60"))) +
+  scale_color_manual(values = rev(c("gray20", "#804600", "#6F8FAF", "gray60"))) +
   labs(y = "Flow before primary settling<br>[m<sup>3</sup>/day]") +
   guides(fill = guide_legend(fill = "none", color = "none")) +
   theme(
@@ -244,9 +248,9 @@ COD <-
                position = position_dodge(), outlier.shape = NA) + 
   #scale_xaringan_color_discrete() +  
   #scale_xaringan_fill_discrete()+
-  theme_xaringan(css_file = "xaringan-themer.css") +
-  scale_color_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
-  scale_fill_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
+  #theme_xaringan(css_file = "xaringan-themer.css") +
+  scale_color_manual(values = rev(c("gray20", "#804600", "#6F8FAF", "gray60"))) +
+  scale_fill_manual(values = rev(c("gray20", "#804600", "#6F8FAF", "gray60"))) +
   scale_y_continuous("COD-removal [%]") + 
   guides(fill = "none") +
   facet_grid(~Plant, scales = "free_x") +
@@ -318,8 +322,8 @@ coor_plot <-
             size = 12
   ) + 
   guides(label = "none", color = "none") +
-  theme_xaringan(css_file = "xaringan-themer.css") +
-  scale_color_manual(values = rev(c("gray27", "#804600", "#6F8FAF", "gray70"))) +
+  #theme_xaringan(css_file = "xaringan-themer.css") +
+  scale_color_manual(values = rev(c("gray20", "#804600", "#6F8FAF", "gray60"))) +
   labs(x = "% of dry weather flow", 
        y = "COD removal [%]") + 
   theme(
@@ -362,7 +366,9 @@ ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0
   plot_layout(ncol = 4, design = design, widths = c(0.2,3,0.2,2), heights = c(1,1,3))
 
 
-ggsave(paste0(primarysettling_folder, "/output/plots/PrimarySettling_article/supplementary/correlation_flow_COD_removal_20221110.png"), width = 10, height = 8)
+
+
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS2_flow-correlation_and_COD_removal_", Sys.Date(),".png"), width = 10, height = 8)
 
 rm(design, flow, COD, coor_plot, check_normality, x_lab, y_lab, correlation_data)
 
@@ -398,7 +404,7 @@ plant_parameters %>%
   ggplot(aes(x = Plant, y = res, color = Plant)) + 
   geom_jitter(position = position_jitterdodge(jitter.width = 0.4), alpha = 0.8, size = 0.6) +
   geom_boxplot(outlier.shape = NA, aes(fill = Plant), alpha = 0.2) +
-  theme_xaringan() +
+  #theme_xaringan() +
   ylab("Residence time [h]") +
   scale_fill_manual(values = c("gray27", "#804600", "#6F8FAF", "gray70")) +
   scale_color_manual(values = c("gray27", "#804600", "#6F8FAF", "gray70")) +
@@ -407,7 +413,7 @@ plant_parameters %>%
   ggplot(aes(x = Plant, y = SOR, color = Plant)) + 
   geom_jitter(position = position_jitterdodge(jitter.width = 0.4), alpha = 0.8, size = 1, stroke = 0) +
   geom_boxplot(outlier.shape = NA, aes(fill = Plant), alpha = 0.2) +
-  theme_xaringan() +
+  #theme_xaringan() +
   ylab("Surface overflow rate [m<sup>3</sup>/m<sup>2</sup>/h]") +
   scale_fill_manual(values = c("gray27", "#804600", "#6F8FAF", "gray70")) +
   scale_color_manual(values = c("gray27", "#804600", "#6F8FAF", "gray70")) +
@@ -415,7 +421,7 @@ plant_parameters %>%
   plot_layout(guides = "collect") + plot_annotation(tag_levels = "A", 
   ) &
   theme(axis.title.x = element_blank(),
-        plot.tag = element_text(color = "black", size = 100, face = "bold"),
+        plot.tag = element_text(color = "black", size = 80, face = "bold"),
         axis.text = element_text(size = 32, color = "black"),
         panel.grid = element_line(linewidth = 0.2),
         axis.ticks = element_line(color = "black", linewidth = 0.2),
@@ -423,8 +429,8 @@ plant_parameters %>%
         axis.title.y = element_markdown(size = 36, color = "black"), 
         legend.position = "none")
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/", "SOR_ressidence.png"), width = 9, height = 6, units = "in")
-ggsave(paste0(OutputPath, "plots/supplementary_results/", "SOR_ressidence.pdf"), width = 9, height = 6, units = "in", scale = 2)
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS3_SOR_ressidence_", Sys.Date(), ".png"), width = 9, height = 6, units = "in")
+
 
 
 rm(plant_parameters, V)
@@ -437,7 +443,7 @@ rm(plant_parameters, V)
 
 stacked_bar_classified <- function(tax_level, tax_rel_abun){
   
-  tax_level_name <- ifelse(str_detect(data[[3]] %>% sample_n(1) %>% unnest(samples) %>% 
+  tax_level_name <- ifelse(str_detect(data[[3]] %>% sample_n(60) %>% unnest(samples) %>% 
                                         filter(str_detect({{tax_level}},"nclassified", T) |
                                                  str_detect({{tax_level}}, "midas", T)) %>% 
                                         select({{tax_level}}) %>% unlist(), "g__"),
@@ -449,7 +455,8 @@ stacked_bar_classified <- function(tax_level, tax_rel_abun){
   see2 <- data[[3]] %>% 
     mutate(samples = 
              map(.x = samples, ~
-                   mutate(.x, uncla = ifelse(str_detect({{tax_level}}, "unclassified"),
+                   ungroup(.) %>% 
+                   mutate(uncla = ifelse(str_detect({{tax_level}}, "unclassified"),
                                              "Unclassified ASVs", 
                                              paste0(ifelse(tax_level_name == "species", "Species", "Genus"), 
                                                     " level classification"))) %>% 
@@ -483,13 +490,13 @@ stacked_bar_classified <- function(tax_level, tax_rel_abun){
     scale_fill_manual(values =c("#6F8FAF", "gray70", "red")) +
     guides(fill = guide_legend()) +
     ylab("Fraction") +
-    theme_xaringan(css_file = "xaringan-themer.css") +
+    #theme_xaringan(css_file = "xaringan-themer.css") +
     theme(
       strip.text.x = element_text(size = 24, color = "black"),
-      axis.text.y = element_text(size = 20, color = "black"),
+      axis.text.y = element_text(size = 19, color = "black"),
       axis.title.y = element_markdown(size = 28, linewidth = 0.00000001, lineheight = 0.1, color = "black"),
       #axis.title.x = element_markdown(size = 24), 
-      axis.text.x = element_markdown(size = 20, color = "black", lineheight = 0.1),
+      axis.text.x = element_markdown(size = 19, color = "black", lineheight = 0.1),
       axis.title.x = element_blank(), #element_markdown(size = 28, linewidth = 0.00000001, lineheight = 0.1, color = "black"),, 
       plot.title = element_markdown(face = "bold", size = 40, color = "black"),
       legend.position = "bottom", 
@@ -510,18 +517,21 @@ specoies <- stacked_bar_classified(Species, rel_abun_species)
 genus <- stacked_bar_classified(Genus, rel_abun_genus)
 
 ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
-  geom_richtext(aes(x = 0.53, y = 0.5, label = "**A**"), size=24, fill = NA, label.color = NA) + 
+  geom_richtext(aes(x = 0.53, y = 0.5, label = "**A**"), size=20, fill = NA, label.color = NA) + 
   theme_void() + 
   plot_spacer() + plot_spacer() + 
   specoies + 
   ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
-  geom_richtext(aes(x = 0.53, y = 0.5, label = "**B**"), size=24, fill = NA, label.color = NA) + 
+  geom_richtext(aes(x = 0.53, y = 0.5, label = "**B**"), size=20, fill = NA, label.color = NA) + 
   theme_void() + 
   plot_spacer() + plot_spacer() + 
   genus + 
   plot_layout(ncol = 2, widths = c(0.1,3), heights = c(0.18,1, 0.18,1)) 
 
-ggsave(paste0(primarysettling_folder, "/output/plots/PrimarySettling_article/supplementary/classified_genus.png"), width =9, height = 7, units = "in")
+
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS4_classified_genera_", Sys.Date(), ".png"), width = 22.5, height = 14, units = "in")
+
+#ggsave(paste0(primarysettling_folder, "/output/plots/PrimarySettling_article/supplementary/classified_genus.png"), width =9, height = 7, units = "in")
 
 
 rm(stacked_bar_classified, specoies, genus)
@@ -534,11 +544,11 @@ rm(stacked_bar_classified, specoies, genus)
 
 rank_abundance <- function(plant){
   amp_merged_speces <- data[[4]]
-  plot_ran <- amp_merged_species %>% 
-    amp_subset_samples(Plant == plant, normalise = F) %>% 
-    amp_rank_abundance(group_by = c("PrimarySettler"))
+  plot_ran <-amp_merged_species %>% 
+    ampvis2::amp_subset_samples(Plant == plant, normalise = F) %>% 
+    ampvis2::amp_rank_abundance(group_by = c("PrimarySettler"))
   plot_ran + 
-    theme_xaringan(css_file = "xaringan-themer.css") +
+    #theme_xaringan(css_file = "xaringan-themer.css") +
     scale_fill_manual(values = c("#6F8FAF", "gray50", "gray70", "red")) +
     scale_color_manual(values = c("#6F8FAF", "gray50", "gray70", "red")) +
     theme(
@@ -553,7 +563,9 @@ rank_abundance <- function(plant){
       legend.title = element_blank(), 
       axis.line = element_line(linewidth = 0.2, color = "black"),
       panel.grid.minor = element_blank(), 
-      panel.grid.major = element_line(linewidth = 0.2, color = "gray90"), 
+      panel.grid.major = element_line(linewidth = 0.2, color = "grey80"),
+      #panel.grid.minor.x =element_line(linewidth = 0.2, color = "grey80"),
+      panel.background = element_rect(fill = "white")
     ) +
     scale_x_continuous(limits = c(1, 25000), trans = "log10", expand = c(0,0)) +
     scale_y_continuous(expand = c(0,0)) + 
@@ -572,7 +584,7 @@ p1 + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.t
   p4 + theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
   plot_layout(ncol = 2, guides = "collect") & theme(legend.position = "bottom")
 
-ggsave(paste0(OutputPath, "supplementary_results/rankabun_23.png"), width =7, height = 6, units = "in")
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS5_rank_abundance_20230510.png"), width =7, height = 6, units = "in")
 
 
 
@@ -721,9 +733,10 @@ tibble(x = c(0,1), y=c(0,1)) %>%
         legend.box = "vertical")
 
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/heatmap_top_abun_genus_influent_newEM.png"), 
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS6_heatmap_before_and_after_", Sys.Date(), ".png"), 
        width = 4, height = 5, units = "in")
 
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS3_SOR_ressidence_", Sys.Date(), ".png"), width = 9, height = 6, units = "in")
 
 #############################################################
 ######################   S7   ############################### 
@@ -809,8 +822,9 @@ ggplot() + theme_void() +
         #legend.direction = "vertical"
   )  
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/seasonal_PCoA_astro_new_ejbymolle.png"), 
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS7_seasonal_PCoA_", Sys.Date(), ".png"), 
        width = 6.5, height = 8)
+
 
 rm(before, after, both, AAW, A, B, C,EB,D,E,Fi,ESW, G, H, I, Ran,J,K,L) 
 
@@ -823,7 +837,8 @@ rm(before, after, both, AAW, A, B, C,EB,D,E,Fi,ESW, G, H, I, Ran,J,K,L)
 abun_tested_species <- 
   data[[3]] %>% 
   mutate(samples = map(samples, ~
-                         distinct(., Species, rel_abun_species))) %>% 
+                         ungroup(.) %>% 
+                         distinct(Species, rel_abun_species))) %>% 
   unnest(samples) %>%
   left_join(., data_species_all_samples %>% 
               group_by(Plant, Sign) %>% 
@@ -841,7 +856,8 @@ abun_tested_species <-
 abun_tested_genus_table <- 
   data[[3]] %>% 
   mutate(samples = map(samples, ~
-                         distinct(., Genus, rel_abun_genus))) %>% 
+                         ungroup(.) %>% 
+                         distinct(Genus, rel_abun_genus))) %>% 
   unnest(samples) %>%
   left_join(., data_genus_all_samples %>% 
               group_by(Plant, Sign) %>% 
@@ -883,9 +899,9 @@ merged %>%
     "Increase"="#6F8FAF", "Insignificant"="gray85")
   ) +
   ylab("Relative abundance [%]") +
-  theme_xaringan(css_file = "xaringan-themer.css") +
+  #theme_xaringan(css_file = "xaringan-themer.css") +
   theme(#axis.ticks.y.right = element_blank(),
-    strip.text.x = element_text(size = 28, lineheight = 0.0005, margin = margin(b = 1, t = 1), color = "gray10"),
+    strip.text.x = element_text(size = 24, lineheight = 0.0005, margin = margin(b = 1, t = 1), color = "gray10"),
     axis.text.y = element_text(size = 20, color = "gray10"),
     axis.ticks.x = element_blank(), 
     axis.title.y = element_markdown(size = 24, color = "gray10",
@@ -895,16 +911,16 @@ merged %>%
     axis.title.x = element_blank(), 
     legend.position = "bottom", 
     legend.key.size = unit(0.3, "cm"),
-    legend.text = element_markdown(margin = margin(t = 0.1, b = 0.1), color = "gray10"), 
+    legend.text = element_markdown(margin = margin(t = 0.1, b = 0.1), color = "gray10", size = 24), 
     legend.title = element_blank(), 
     axis.line.y = element_line(color = "gray10", linewidth = 0.2),
     axis.ticks.y = element_line(color = "gray10", linewidth = 0.2),
     panel.grid.minor = element_blank(), 
-    panel.grid.major = element_line(linewidth = 0.2, color = "gray90")
+    panel.grid.major = element_line(linewidth = 0.2, color = "grey80"),
+    panel.background = element_rect(fill = "white")
   )
 
-
-ggsave(paste0(OutputPath, "plots/supplementary_results/stackedbar_tested_species.png"), width =6.5, height = 3, units = "in")
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS8_cummulative_abundance_tested_species", Sys.Date(), ".png"), width =6.8, height = 3, units = "in")
 
 
 #############################################################
@@ -938,7 +954,7 @@ rm(DF, merged, abun_tested_genus_table, abun_tested_genus, abun_tested_species)
 ######################   S11  ############################### 
 #############################################################
 
-source(paste0(SourcePath, "upset_plot.R"))
+source(paste0(SourcePath, "/upset_plot.R"))
 
 tibble(x = c(0,1), y=c(0,1)) %>% 
   ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) +
@@ -952,7 +968,7 @@ tibble(x = c(0,1), y=c(0,1)) %>%
   upset_plot(data_genus_random_subsamling)+
   plot_layout(ncol = 2, widths = c(0.15, 5))
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/upset.png"), width = 10, height = 7)
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS11_upset_plot.png"), width = 10, height = 7)
 
 rm(upset_plot)
 
@@ -1016,28 +1032,31 @@ ambigous_species_count %>%
                               ), pattern_spacing = 0.013) + 
   ggpattern::scale_pattern_manual(
     values= c("stripe", "crosshatch", "none"))+   #manually assign pattern
-  geom_label(aes(y = n, label = n, fill  = Sign), size = 6, label.size = NA,
+  geom_label(aes(y = n, label = n, fill  = Sign), size = 6.5, label.size = NA,
              color = "black", show.legend = F, alpha = 0.8, label.padding = unit(0.05, "lines"),
-             position = position_stack(vjust = 0.5), 
+             position = position_stack(vjust = 0.5), family = "sans" 
   ) + 
   scale_fill_manual(values = c("#CE7E7E", "#6F8FAF", "#DAA520","#F5DEB3", "grey50","grey60", "grey70", "grey80", "grey90")) +
   scale_y_continuous(expand = c(0,0)) +
   ylab("Number of genera") + 
-  theme_xaringan(css_file = "xaringan-themer.css") + 
-  theme(axis.text.x = element_markdown(angle = 0, hjust = 0.5, vjust = 1, size = 14, lineheight = 0.1, color = "gray10"), 
+  #theme_xaringan(css_file = "xaringan-themer.css") + 
+  theme(axis.text.x = element_markdown(angle = 0, hjust = 0.5, vjust = 1, size = 16, lineheight = 0.1, color = "gray10"), 
         axis.text.y = element_text(size = 20, color = "gray10"),
         axis.title.x = element_blank(), 
-        axis.title.y = element_markdown(size = 24, color = "gray10",
-                                        linewidth = 0.00000001, lineheight = 0.0001),
+        axis.title.y = element_markdown(size = 20, color = "gray10",
+                                        #linewidth = 1, lineheight = 0.1
+                                        ),
         panel.grid.minor = element_blank(), 
         axis.line.y = element_line(color = "gray10", linewidth = 0.2),
         axis.ticks.y = element_line(color = "gray10", linewidth = 0.2),
         axis.ticks.x = element_blank(), 
-        panel.grid.major = element_line(linewidth = 0.2, color = "gray90"),
         legend.position = "right", legend.direction = "vertical", 
-        legend.text = element_markdown(size = 20, color = "black"), 
+        legend.text = element_markdown(size = 16, color = "black"), 
         legend.key.size = unit(8, "pt"),
         legend.title = element_markdown(size = 20, color = "black", lineheight = 0.1), 
+        panel.grid.major = element_line(linewidth = 0.2, color = "grey80"),
+        panel.grid.minor.x =element_line(linewidth = 0.2, color = "grey80"),
+        panel.background = element_rect(fill = "white")
   ) + 
   guides(fill = guide_legend(title = "Trend<br>(Plant 1-Plant 2)", title.position = "top", title.vjust = 1, 
                              nrow = 10, order = 2,
@@ -1050,8 +1069,8 @@ ambigous_species_count %>%
   )
 
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/ambigous_trends.png"), 
-       width = 4.7, height = 3.3, units = "in")
+ggsave(paste0(OutputPath, "plots/supplementary/FigureS12_ambigous_trends.png"), 
+       width = 5, height = 3.3, units = "in")
 
 
 rm(ambigous_species_count, plantpair_ambigous_species)

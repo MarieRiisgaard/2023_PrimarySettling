@@ -100,19 +100,20 @@ san_key_plot <- function(plant){
                , next_node = next_node
                , fill = node
                , label = paste0(node," (", genus, ")"))) +
-    ggsankey::geom_sankey(flow.alpha = 0.5
-                , node.color = "black"
+    ggsankey::geom_sankey(#flow.alpha = 0.5
+                  node.color = "black"
                   ,show.legend = FALSE) + 
-    ggsankey::geom_sankey_label(size = 8, color = "black", fill= "white", hjust = 0.8) + 
+    ggsankey::geom_sankey_label(size = 14 ,color = "black", fill= "white",family = "sans", label.padding = unit(0.15, "lines") #, hjust = 0.8
+                                ) + 
     scale_x_discrete(expand = c(0.001,0.5), 
                      labels = c(
                        "Plant" = "No. of tested taxa<br>(No. of species/No. of genera)", 
                        "Sign_genus" = "Trends when testing<br>at the genus level<br>(No. of species/No. of genera)", "Sign_species" = "Trends when testing<br>at the species level<br>(No. of species)")) +
-    theme_xaringan() + 
     theme(legend.position = "none", 
           axis.title.x = element_blank(), axis.title.y = element_blank()
           , axis.text.y = element_blank()
           , axis.ticks.x = element_blank(), axis.ticks.y = element_blank()  
+          ,panel.background = element_rect(fill = NA)
           , panel.grid = element_blank(), axis.text.x = element_markdown(color = "black")
     ) +
     scale_fill_manual(values = c(plant = "white", 

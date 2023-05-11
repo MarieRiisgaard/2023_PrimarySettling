@@ -22,22 +22,22 @@ upset_df <- wilcox_data %>%
   select(-X, -p_adjust, -mean_log2) %>% 
   pivot_wider(names_from = Plant, values_from = Genera) %>%
   filter(!is.na(Sign)) %>%
-  mutate_at(c( "Randers","Ejby Mølle", "Esbjerg West", "Aalborg West"), 
+  mutate_at(c( "Randers","Ejby MÃ¸lle", "Esbjerg West", "Aalborg West"), 
             function(x){if_else(is.na(x), F, T)}) %>% 
   mutate(Sign = factor(Sign, levels = c("Insignificant", "Increase", "Decrease")))
 
-plants = rev(c("Aalborg West", "Ejby Mølle", "Esbjerg West", "Randers"))
+plants = rev(c("Aalborg West", "Ejby MÃ¸lle", "Esbjerg West", "Randers"))
 
 upset_df[plants] = upset_df[plants] == 1
 
 
-#upset_df %>% filter(`Ejby Mølle` == FALSE & `Aalborg West` == FALSE & `Randers` == TRUE & `Esbjerg West` == FALSE) %>% group_by(Sign) %>% summarise(n())
+#upset_df %>% filter(`Ejby M?lle` == FALSE & `Aalborg West` == FALSE & `Randers` == TRUE & `Esbjerg West` == FALSE) %>% group_by(Sign) %>% summarise(n())
 
 all_samples = ComplexUpset::upset(upset_df, plants, 
                     name='Number of genera shared across WWTP', 
                     set_sizes = ComplexUpset::upset_set_size(geom=geom_bar(
                       aes(fill=Sign), show.legend = T, size = 14)) +
-                      guides(fill = guide_legend(title = NULL, override.aes = list(size = 5))) +
+                      guides(fill = guide_legend(title = NULL, override.aes = list(size = 3))) +
                       scale_x_continuous(expand = c(0,0), trans = "reverse", breaks = c(0, 100, 200, 300, 400, 500)) +
                       scale_y_continuous(expand = c(0,0), breaks = c(0, 100, 200, 300, 400, 500, 600)) +
                       ylab('Number of genera') + 
@@ -69,7 +69,7 @@ all_samples = ComplexUpset::upset(upset_df, plants,
                     width_ratio=0.3, # 0.3 
                     height_ratio = 0.3, # 0.5
                     sort_sets=F,  guides='over',
-                    themes=ComplexUpset::upset_default_themes(text=element_text(size = 40, color = "black"), 
+                    themes=ComplexUpset::upset_default_themes(text=element_text(size = 24, color = "black"), 
                                                 title = element_text(color = "black"),
                                                 axis.text = element_text(color = "black")
                                                 #strip.text = element_text(color= "black")

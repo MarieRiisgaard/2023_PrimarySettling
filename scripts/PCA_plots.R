@@ -1,3 +1,17 @@
+#################################################
+#### Season plot function #####################
+############################################
+
+# function from https://newbedev.com/determine-season-from-date-using-lubridate-in-r
+# the season cut dates (in the form MMDD) are based on the astronomical seasons. 
+# correlates better with the process tank temperature profile than cutting by months.
+getSeason <- function(input.date){
+  numeric.date <- 100*month(input.date)+day(input.date)
+  cuts <- base::cut(numeric.date, breaks = c(0,320,0621,0923,1222,1231))
+  levels(cuts) <- c("Winter","Spring","Summer","Autumn","Winter")
+  return(cuts)
+}
+
 ## Function to make PCA seperated by plant
 
 PCA_paired_season_color <- function(plant, amp_object){
@@ -6,16 +20,17 @@ PCA_paired_season_color <- function(plant, amp_object){
   samples <- amp_object 
   
   samples$metadata <- samples$metadata %>% 
-    mutate(Season = season(Date_rawdata)) %>% 
-    select(SampleID, Plant, PrimarySettler, Date_rawdata, Season) %>% 
-    mutate(month = month(Date_rawdata),
-           date_num = as.numeric(month),
-           month_fct = as.factor(month),
-           month_names = month(Date_rawdata, label = T, abbr = T), 
-           s_ = factor(Season, 
-                       levels = c("DJF", "MAM", "JJA", "SON"),
-                       labels = c("Winter", "Spring", "Summer", "Autumn")
-           )) %>% 
+    mutate(Season = getSeason(Date_rawdata)) %>% 
+    select(SampleID, Plant, PrimarySettler, Date_rawdata, Season
+           ) %>% 
+    mutate(#month = month(Date_rawdata),
+           #date_num = as.numeric(month),
+           #month_fct = as.factor(month),
+           #month_names = month(Date_rawdata, label = T, abbr = T),
+           s_ = factor(Season,
+                       #levels = c("DJF", "MAM", "JJA", "SON"),
+                       levels = c("Winter", "Spring", "Summer", "Autumn")
+           )) %>%
     rename("PS_" = "PrimarySettler")
   
   paired_samples <-  
@@ -79,28 +94,28 @@ PCA_paired_season_color <- function(plant, amp_object){
     geom_point(aes(fill = PS_, #s_, 
                    shape = PS_
     ), size = 2.5, stroke = 1) +
-    scale_color_manual(values = c("gray30", "gray80")) +
+    scale_color_manual(values = c("gray20", "gray80")) +
     # scale_fill_gradientn(colors = month_colors, 
     #                      breaks= 1:12, 
     #                      labels = month_names
     #                      ) +
     #scale_color_manual(values = season_colors) +
     #scale_shape_manual(values = c(15,16,17,18), 
-    scale_fill_manual(values = c("gray30", "gray80"), #values = season_colors, 
+    scale_fill_manual(values = c("gray20", "gray80"), #values = season_colors, 
                       labels = c("Before", "After")) +  #c("Winter", "Spring", "Summer", "Autumn")) +
     scale_shape_manual(values = c(21, 22), 
                        labels = c("Before", "After")
     ) +
     #labs(title = paste0('__', plant, "__")) +
-    theme(legend.text = element_markdown(size = 32, lineheight = 0.001), 
-          legend.title =element_markdown(size = 32, lineheight = 0.001),
+    theme(legend.text = element_markdown(size = 20, lineheight = 0.001), 
+          legend.title = element_blank(), #element_markdown(size = 20, lineheight = 0.001),
           legend.spacing.y = unit(0.001, 'cm'),
           legend.position = "bottom",
           legend.box = "horizontal",
-          plot.subtitle = element_markdown(size = 32, lineheight = 0.0001),
-          axis.title = element_text(size = 35, color = "black"),
-          axis.text = element_text(size = 32, color = "black"),
-          plot.title = element_markdown(size = 42),
+          plot.subtitle = element_markdown(size = 20, lineheight = 0.0001),
+          axis.title = element_text(size = 20, color = "black"),
+          axis.text = element_text(size = 16, color = "black"),
+          plot.title = element_markdown(size = 24),
           panel.grid.minor = element_blank()) +
     guides(shape = "none",  #guide_legend("Location<br>Before Settler"), 
            fill = "none", 
@@ -109,9 +124,9 @@ PCA_paired_season_color <- function(plant, amp_object){
            #                     override.aes=list(shape=c(22), size = 3.5)
            # ),
            color = guide_legend(override.aes=list(shape=c(21,22), 
-                                                  fill = c("gray30", "gray80"),  
-                                                  size = 3.5,
-                                                  color = c("gray30", "gray80"), 
+                                                  fill = c("gray20", "gray80"),  
+                                                  size = 5,
+                                                  color = c("gray20", "gray80"), 
                                                   stroke = 1.1),
                                 title = "__Primary Settler__", 
                                 #direction = "horizontal", 
@@ -151,16 +166,11 @@ plot_all_influent_streams <- function(amp_object, primary_settler = c("Before"))
   
   month_names = sort(unique(samples$meta$month_names))
   shape_vec = rep(22, 150)
-  season_colors <- c("#6F8FAF", "#A9DFBF", "#F9E79F", "#D98880")
-  
   
   samples$metadata <- samples$metadata %>% 
-    mutate(Season = season(Date_rawdata)) %>% 
+    mutate(Season = getSeason(Date_rawdata)) %>% 
     select(SampleID, Plant, PrimarySettler, Date_rawdata, Season) %>% 
-    mutate(month = month(Date_rawdata),
-           date_num = as.numeric(month),
-           month_fct = as.factor(month),
-           month_names = month(Date_rawdata, label = T, abbr = T), 
+    mutate(
            s_ = factor(Season, 
                        levels = c("DJF", "MAM", "JJA", "SON"),
                        labels = c("Winter", "Spring", "Summer", "Autumn")
@@ -193,85 +203,59 @@ plot_all_influent_streams <- function(amp_object, primary_settler = c("Before"))
                  filter_species = 0.01, 
                  type = "pcoa", 
                  #output = "complete",
-                 #sample_shape_by = "Plant", 
+                 sample_shape_by = "Plant", 
                  sample_point_size = 2.5, 
-                 envfit_factor = "Plant", 
+                 #envfit_factor = "Plant", 
                  #envfit_numeric = "date_num",
-                 envfit_textcolor = "black", 
-                 envfit_textsize = 12, 
+                 #envfit_textcolor = "black", 
+                 #envfit_textsize = 6, 
                  sample_colorframe = T,
                  #species_plot = T, 
                  #species_nlabels = 7, species_label_taxonomy = "OTU"
     ) +
-    scale_color_manual(values = c("gray20", "#804600", "#6F8FAF", "gray55")
+    scale_color_manual(values = c("gray20", "#804600", "#6F8FAF", "gray80")
                        #data[[4]]
     ) +
-    scale_fill_manual(values = c("gray20", "#804600", "#6F8FAF", "gray55")
+    scale_fill_manual(values = c("gray20", "#804600", "#6F8FAF", "gray80")
                       #data[[4]]
+                      
     ) +
-    #geom_point(aes(fill = Plant, #shape = Plant
-    #), size = 3, stroke = 1, alpha = 0.8) +
-    # scale_xaringan_color_discrete(aes(alpha = Location)) +
-    # scale_xaringan_fill_discrete() + 
-    # scale_fill_gradientn(colors = month_colors, 
-    #                      breaks= 1:12, 
-    #                      labels = month_names
-    #                      ) +
-    #scale_shape_manual(values = c(22, 22, 22, 22), 
-    #                   #labels = c("After", "Before")
-    #) +
+  scale_shape_manual(values = c(16,16,16,16)) +
   labs(title = paste0('__', primary_settler, " primary settling","__")) +
-    theme(legend.text = element_markdown(size = 35), 
-          legend.title =element_blank(), 
-          legend.position = "none", 
-          plot.subtitle = element_markdown(size = 24, lineheight = 0.0001),
-          axis.title = element_text(size = 35, color = "black"),
-          axis.text = element_text(size = 30, color = "black"),
+    theme(legend.text = element_markdown(size = 20), 
+          legend.title = element_blank(), 
+          #legend.position = "none", 
+          plot.subtitle = element_markdown(size = 20, lineheight = 0.0001),
+          axis.title = element_text(size = 20, color = "black"),
+          axis.text = element_text(size = 16, color = "black"),
           legend.box = "horizontal",
-          plot.title = element_markdown(size = 44),
+          plot.title = element_markdown(size = 24),
           panel.grid.minor = element_blank()) +
-    guides(#shape = "none",  
-      color = guide_legend(title = "__Plant__", 
-                           nrow = 1, vjust = 1, order = 0, 
-                           override.aes=list(shape=c(16), alpha = 1)),
-      fill = guide_legend(title = "__Plant__", 
-                          nrow = 1, vjust = 1, order = 0, 
-                          override.aes=list(shape=c(16),alpha = 1) 
-                          #guide_legend(override.aes=list(shape=c(22,22), 
-                          #                                        fill = "white", 
-                          #                                        color = c("black", "gray80"), 
-                          #                                        stroke = 2),
-                          #                      title = "__Primary<br>Settler__", 
-                          #                      direction = "vertical", 
-                          #                      title.position = "left",
-                          #                      vjust = 1, nrow = 2, order = 1
-      ))
-  
-  plot[["layers"]][[3]][["data"]][["Name"]] = c("Ejby M?lle",
-                                                "Esbjerg West",
-                                                "Randers",     
-                                                "Aalborg West")
-  
+    guides( 
+      line = "none",
+      shape = "none",  #guide_legend("Location<br>Before Settler"), 
+      fill = "none", 
+      color = guide_legend(override.aes=list(shape=c(16,16,16,16), 
+                                             size = 5,
+                                             fill = NA,
+                                             stroke = 0, 
+                                             linetype=c(0,0,0,0)),
+                           title = "__Primary Settler__", 
+                           #direction = "horizontal", 
+                           title.position = "left",
+                           vjust = 1, nrow = 1, order = 1))
+      
+  # plot[["layers"]][[3]][["data"]][["Name"]] = c("Ejby Mølle",
+  #                                               "Esbjerg West",
+  #                                               "Randers",     
+  #                                               "Aalborg West")
+  # 
   plot
   
 }
 
 
 
-
-#################################################
-#### Season plot function #####################
-############################################
-
-# function from https://newbedev.com/determine-season-from-date-using-lubridate-in-r
-# the season cut dates (in the form MMDD) are based on the astronomical seasons. 
-# correlates better with the process tank temperature profile than cutting by months.
-getSeason <- function(input.date){
-  numeric.date <- 100*month(input.date)+day(input.date)
-  cuts <- base::cut(numeric.date, breaks = c(0,320,0621,0923,1222,1231))
-  levels(cuts) <- c("Winter","Spring","Summer","Autumn","Winter")
-  return(cuts)
-}
 
 
 
@@ -362,13 +346,13 @@ plot_each_influent_stream <- function(plant, env_factor, amp_object, primarysett
     #                   #labels = c("After", "Before")
     #) +
   #labs(title = paste0('__', plant, "__")) +
-  theme_xaringan(css_file = "xaringan-themer.css") + 
-    theme(legend.text = element_markdown(size = 26, color = "black"), 
+  #theme_xaringan(css_file = "xaringan-themer.css") + 
+    theme(legend.text = element_markdown(size = 20, color = "black"), 
           legend.key.size = unit(8, "pt"),
-          legend.title = element_markdown(size = 26, color = "black"), 
-          axis.title = element_markdown(color = "black", size = 26),
+          legend.title = element_markdown(size = 20, color = "black"), 
+          axis.title = element_markdown(color = "black", size = 16),
           legend.position = "none", 
-          plot.subtitle = element_markdown(size = 26, lineheight = 0.0001, 
+          plot.subtitle = element_markdown(size = 20, lineheight = 0.0001, 
                                            margin=margin(b = unit(1, "mm")), color = "black"),
           axis.text = element_markdown(size = 20, color = "black"), 
           #legend.box = "horizontal", 

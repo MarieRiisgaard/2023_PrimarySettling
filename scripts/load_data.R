@@ -257,7 +257,8 @@ tidy_plant <- function(plant){
                                                                   levels = c( "PAO", "nitrifiers", "filaments", "GAO", "Other", 
                                                                               "not_known", "Unclassified ASVs"),
                                                                   labels = c("__PAO__","__Nitrifiers__", "__Filaments__", "__GAO__" ,"__Other__", 
-                                                                             "__Not known__", "__Unclassified ASVs__")))))
+                                                                             "__Not known__", "__Unclassified ASVs__"))))) %>% 
+    mutate(samples = map(.x = samples, ~ungroup(.x)))
   
   
   

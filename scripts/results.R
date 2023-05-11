@@ -23,37 +23,36 @@ pacman::p_load(
   xaringanthemer,
   tidyverse, 
   showtext, 
-  ampvis2
+  ampvis2, 
+  ragg, 
+  rasterpdf
 )
-
-style_duo_accent(
-  primary_color = "#211a52", secondary_color = "#594fbf", inverse_background_color = "#54616e", 
-  text_font_google = google_font("Barlow"))
-
 
 #################################################
 # Load data
 #################################################
 
 #Load workspace back to RStudio
-load(paste0(OutputPath, "R_environments/","Environment_20221025.RData"))
+load(paste0(OutputPath, "R_environments/","Environment_20230315.RData"))
 
 # Generate dataframe from scratch 
-  source(paste0(SourcePath, "/load_data.R"))
-  data <- master_function(reads_randers = 60000,
-                          reads_other = 60000,
-                          rarefy = T,
-                          save_non_merged_ampvis = T)
-  rm(d_COD_3, d_meta_by_date, tidy_meta, metadata, getSeason, randers_prop_flow, master_function)
-  save.image(file=paste0(OutputPath, "/R_environments/", "Environment_", format(Sys.Date(), format = "%Y%m%d"), ".RData"))
+  # source(paste0(SourcePath, "/load_data.R"))
+  # data <- master_function(reads_randers = 60000,
+  #                         reads_other = 60000,
+  #                         rarefy = T,
+  #                         save_non_merged_ampvis = T)
+  # rm(d_COD_3, d_meta_by_date, tidy_meta, metadata, getSeason, randers_prop_flow, master_function)
+  # save.image(file=paste0(OutputPath, "/R_environments/", "Environment_", format(Sys.Date(), format = "%Y%m%d"), ".RData"))
 
 
 
 # Load results from wilcox_test.R
 data_genus_random_subsamling <- 
-  read.csv(paste0(OutputPath, "files/Genus_wilcox_test_2022-09-06_rare_60000_n_min12_obs_BEFORE_cross_all_24_sample_pairs.txt")) %>% mutate(
-  Sign = if_else(mean_log2 > 0, "Increase", "Decrease"),
-  Sign = if_else(p_adjust > 0.05, "Insignificant", Sign)) 
+  read.csv(paste0(OutputPath, "files/Genus_wilcox_test_2022-09-06_rare_60000_n_min12_obs_BEFORE_cross_all_24_sample_pairs.txt")) %>% 
+  mutate(
+    Plant = ifelse(str_detect(Plant, "\xf8"), str_replace(Plant, "\xf8", "ø"), Plant),
+    Sign = if_else(mean_log2 > 0, "Increase", "Decrease"),
+    Sign = if_else(p_adjust > 0.05, "Insignificant", Sign)) 
 
 data_genus_all_samples <- 
   read.csv(paste0(OutputPath, "files/genus_wilcox_test_2022-10-06_rare_60000_min_12_all_samples.txt")) %>% 
@@ -65,6 +64,7 @@ data_genus_all_samples <-
 data_species_all_samples <- 
   read.csv(paste0(OutputPath, "files/species_wilcox_test_2022-10-06_rare_60000_min_12_all_samples.txt"))  %>% 
   mutate(
+    Plant = ifelse(str_detect(Plant, "\xf8"), str_replace(Plant, "\xf8", "ø"), Plant),
     Sign = if_else(mean_log2 > 0, "Increase", "Decrease"),
     Sign = if_else(p_adjust > 0.05, "Insignificant", Sign))
 
@@ -74,6 +74,7 @@ data_species_all_samples <-
 # Figure 1: COD removal
 #############################################
 
+COD_removal_result <- 
 data[[2]] %>% 
   mutate(COD_removal =
            ((COD_beforePS-COD_afterPS)/COD_beforePS)*100) %>% 
@@ -99,17 +100,16 @@ data[[2]] %>%
                        labels = 
                          c("COD before<br>primary settling<br>[mg/L]",
                            "COD after<br>primary settling<br>[mg/L]", 
-                           "COD-removal [%]"))) %>% 
+                           "COD-removal<br>[%]"))) %>% 
   ggplot() + 
   geom_jitter(aes(x = Plant, y = values, color = name), 
-              position = position_jitterdodge(jitter.width = 0.20), size = 1) + 
+              position = position_jitterdodge(jitter.width = 0.20), size = 2) + 
   geom_boxplot(aes(x = Plant, y = values, 
                    color = name, fill = name),
                alpha = 0.8,
                position = position_dodge(), outlier.shape = NA) + 
   scale_fill_manual(values = c("gray30", "#708090", "gray70")) +
   scale_color_manual(values = c("gray30", "#708090", "gray70")) +
-  theme_xaringan(css_file = "xaringan-themer.css") +
   #scale_fill_manual(values = c("white", "white","#211a52")) +
   #facet_wrap(~Plant, ncol = 4, scales = "free_x") +
   scale_y_continuous(expand = c(0,100),
@@ -119,36 +119,41 @@ data[[2]] %>%
                                          breaks = c(seq(0,100,by=20)))
   ) + 
   guides(fill = guide_legend()) +
-  theme(#axis.ticks.y.right = element_blank(), 
-        axis.title.x = element_blank(), 
+  theme(axis.title.x = element_blank(),
         legend.position = "right", 
-        axis.text.y = element_text(size = 30, color = "black"), 
-        #axis.text.x = element_blank(),
-        axis.text.x = element_text(size = 36, color = "black"), 
-        legend.text = element_markdown(size = 32, color = "black",margin = margin(t = 10, b = 5), lineheight = 0.001), 
+        axis.text.y = element_text(size = 20, color = "black"),#, family = "Comic Sans MS"), 
+        axis.text.x = element_text(size = 20, color = "black"),#, family = "Arial"), 
+        legend.text = element_markdown(size = 16, color = "black",
+                                       margin = margin(t = 10, b = 5), lineheight = 0.001,
+                                       #family = "Arial"
+                                       ), 
         legend.title = element_blank(), 
         axis.line = element_line(color = "black", linewidth = 0.4),
         axis.ticks.y.left = element_line(color = "black", linewidth = 0.4),
         axis.ticks.y.right = element_line(color = "black", linewidth = 0.4),
         axis.ticks.x = element_line(color = "black", linewidth = 0.4),
-        axis.title.y.left = element_markdown(size = 32, color = "black"),
-        axis.title.y.right = element_markdown(size = 32, color = "black"), 
-        panel.grid.major = element_line(linewidth = 0.2),
-        panel.grid.minor.x =element_line(linewidth = 0.2),
+        axis.title.y.left = element_markdown(size = 20, color = "black"),
+        axis.title.y.right = element_markdown(size = 20, color = "black"), 
+        panel.grid.major = element_line(linewidth = 0.2, color = "grey80"),
+        panel.grid.minor.x =element_line(linewidth = 0.2, color = "grey80"),
+        panel.background = element_rect(fill = "white"),
         panel.spacing = unit(0,'lines'))
 
 
-ggsave(paste0(OutputPath, "plots/results/COD_removal.png"), width = 8, height = 4, units = "in")
-ggsave(paste0(OutputPath, "plots/results/COD_removal.pdf"), width = 8, height = 4, units = "in", scale = 2)
+#ggsave(paste0(OutputPath, "plots/results/COD_removal_.png"), width = 8, height = 4, units = "in")
+#ggsave(paste0(OutputPath, "plots/results/COD_removal.pdf"), width = 8, height = 4, units = "in", scale = 2)
 
-
+agg_pdf(paste0(OutputPath,"plots/results/Figure1_COD_removal_", Sys.Date(),".pdf"), 
+        width = 12, height = 6, units = "in", res = 600)
+COD_removal_result
+invisible(dev.off())
 
 ############################################
 # Figure 2: Overall PCA
 #######################################
 
 # Plot function: 
-PCA_plantwise <- source(paste0(SourcePath, "PCA_plots.R"), local = knitr::knit_global())
+PCA_plantwise <- source(paste0(SourcePath, "/PCA_plots.R"), local = knitr::knit_global())
 
 amp_merged_species <- data[[4]] 
 all <- 
@@ -157,33 +162,50 @@ all <-
   PCA_paired_season_color("Esbjerg West", amp_object = amp_merged_species) + labs(title = paste0("__Esbjerg West__ (n=24)")) +
   PCA_paired_season_color("Randers", amp_object = amp_merged_species) + labs(title = paste0("__Randers__ (n=42)")) 
 
-all + plot_layout(guides = "collect") & theme(legend.position = "bottom",
+PCA_article <- all + plot_layout(guides = "collect") & theme(legend.position = "bottom",
                                               legend.box = "horizontal")
 
-ggsave(paste0(OutputPath, "plots/results/overall_PCA.png"), width = 7.5, height = 7, units = "in")
+#ggsave(paste0(OutputPath, "plots/results/overall_PCA.png"), width = 7.5, height = 7, units = "in")
+
+agg_pdf(paste0(OutputPath,"plots/results/Figure2_PCoA_", Sys.Date(),".pdf"), 
+        width = 12, height = 12, units = "in", res = 600)
+PCA_article
+invisible(dev.off())
 
 
 ############################################
 # Figure 3: Influent streams
 #######################################
 
-plot_all_influent_streams(amp_object = amp_merged_species) + 
+influent_streams <- plot_all_influent_streams(amp_object = amp_merged_species) + 
   plot_all_influent_streams(amp_object = amp_merged_species, primary_settler = "After") + 
   plot_layout(ncol = 2, guides = "collect") & 
   theme(legend.position = "bottom",legend.box = "horizontal")
 
-ggsave(paste0(OutputPath, "plots/results/all_influentstreams.png"), width = 10, height = 5.5, units = "in")
+
+agg_pdf(paste0(OutputPath,"plots/results/Figure3_influent_streams_", Sys.Date(),".pdf"), 
+        width = 12, height = 7, units = "in", res = 600)
+influent_streams
+invisible(dev.off())
+
+
+#ggsave(paste0(OutputPath, "plots/results/all_influentstreams.png"), width = 10, height = 5.5, units = "in")
 
 
 ####################################
 # Figure 5: Upset plot
 ###################################
 
-source(paste0(SourcePath, "upset_plot.R"))
+source(paste0(SourcePath, "/upset_plot.R"))
 
-upset_plot(data_genus_all_samples)
+upset_plot_artcile <- upset_plot(data_genus_all_samples)
 
-ggsave(paste0(primarysettling_folder, "output/plots/PrimarySettling_article/upset.png"), width = 7.5, height = 4)
+agg_pdf(paste0(OutputPath,"plots/results/Figure5_upset_", Sys.Date(),".pdf"), 
+        width = 14, height = 8, units = "in", res = 600)
+upset_plot_artcile
+invisible(dev.off())
+
+#ggsave(paste0(primarysettling_folder, "output/plots/PrimarySettling_article/upset.png"), width = 7.5, height = 4)
 
 
 ####################################
@@ -193,19 +215,33 @@ ggsave(paste0(primarysettling_folder, "output/plots/PrimarySettling_article/upse
 source(paste0(SourcePath, "/sankey_plot.R"))
 
 ## All 
-san_key_plot("Randers") + theme(axis.text.x = element_blank()) +
+sankey_all <- 
+  san_key_plot("Randers") + theme(axis.text.x = element_blank()) +
   san_key_plot("Ejby Mølle")  + theme(axis.text.x = element_blank())+ 
   san_key_plot("Esbjerg West")  + theme(axis.text.x = element_blank()) +
-  san_key_plot("Aalborg West") + theme(axis.text.x = element_markdown(size = 26, lineheight = 0.3)) +
+  san_key_plot("Aalborg West") + theme(axis.text.x = element_markdown(size = 40, lineheight = 0.003)) +
   plot_layout(ncol = 1)
 
-ggsave(paste0(OutputPath, "plots/supplementary_results/sankey_rev.png"), width = 6.5, height = 6.5,  units = "in")
+agg_png(paste0(OutputPath,"plots/supplementary/Figure_S10_sankey_all_", Sys.Date(),".png"), 
+        width = 5, height = 5.2, units = "in", res = 600)
+sankey_all
+invisible(dev.off())
+
+
+#ggsave(paste0(OutputPath, "plots/supplementary_results/sankey_rev.png"), width = 6.5, height = 6.5,  units = "in")
 
 ## Only Esbjerg West
-san_key_plot("Esbjerg West") + theme(axis.text.x = element_markdown(size = 26, lineheight = 0.3)) +
+sankey_esw <- 
+  san_key_plot("Esbjerg West") + theme(axis.text.x = element_markdown(size = 40, lineheight = 0.003)) +
   plot_layout(ncol = 1)
 
-ggsave(paste0(OutputPath, "plots/results/sankey_Esbjerg_rev.png"), width = 6.5, height = 2,  units = "in")
+agg_pdf(paste0(OutputPath,"plots/results/Figure4_sankey_Esbjerg_", Sys.Date(),".pdf"), 
+        width = 6, height = 1.6, units = "in", res = 600)
+sankey_esw
+invisible(dev.off())
+
+
+#ggsave(paste0(OutputPath, "plots/results/sankey_Esbjerg_rev.png"), width = 5, height = 2,  units = "in")
 
 rm(san_key_plot)
 
@@ -217,7 +253,9 @@ rm(san_key_plot)
 abun_tested_genus <- 
   data[[3]] %>% 
   mutate(samples = map(samples, ~
-                         distinct(., Genus, rel_abun_genus))) %>% 
+                         ungroup(.) %>% 
+                         #select(Genus, rel_abun_genus) %>% 
+                         distinct(Genus, rel_abun_genus))) %>% 
   unnest(samples) %>%
   left_join(., data_genus_all_samples %>% 
               group_by(Plant, Sign) %>% 
@@ -233,6 +271,7 @@ abun_tested_genus <-
             sd = sd(sum_abun)) %>% 
   mutate(Tax = "Genus")
 
+stacked_bar <- 
 abun_tested_genus %>%
   group_by(Plant, PrimarySettler, Tax) %>% 
   filter(Tax == "Genus") %>% 
@@ -248,26 +287,26 @@ abun_tested_genus %>%
   geom_bar(#position="fill", 
     stat="identity") + 
   facet_wrap(~Plant, nrow = 1) +
-  geom_text(size = 8, position = position_stack(vjust = 0.6), lineheight = 0.22) + 
+  geom_text(size = 7, position = position_stack(vjust = 0.6), lineheight = 0.8, family = "sans") + 
   scale_y_continuous(expand = c(0,0)) +
+  scale_x_discrete(expand = c(0,0)) +
   scale_fill_manual(values = c(#"#797597",  "#6F8FAF", "#708090", "gray80"),
     "Not tested"="gray45","Decrease"="#CE7E7E", 
     "Increase"="#6F8FAF", "Insignificant"="gray85")
   ) +
   ylab("Relative abundance [%]") +
-  theme_xaringan(css_file = "xaringan-themer.css") +
-  theme(#axis.ticks.y.right = element_blank(),
-    strip.text.x = element_text(size = 28, lineheight = 0.0005, margin = margin(b = 1, t = 1), color = "gray10"),
+  theme(
+    strip.text.x = element_text(size = 28, lineheight = 0.0005, margin = margin(b = 1.3, t = 1), color = "gray10"),
     axis.text.y = element_text(size = 20, color = "gray10"),
     axis.ticks.x = element_blank(), 
     axis.title.y = element_markdown(size = 24, color = "gray10",
                                     linewidth = 0.00000001, lineheight = 0.0001),
     #axis.title.x = element_markdown(size = 24), 
-    axis.text.x = element_markdown(size =20,linewidth = 0.00000001, lineheight = 0.0001, color = "gray10"),
+    axis.text.x = element_markdown(size =20, linewidth = 0.00000001, lineheight = 0.0001, color = "gray10"),
     axis.title.x = element_blank(), 
     legend.position = "bottom", 
-    legend.key.size = unit(0.3, "cm"),
-    legend.text = element_markdown(margin = margin(t = 0.1, b = 0.1), color = "gray10"), 
+    legend.key.size = unit(1, "cm"),
+    legend.text = element_markdown(margin = margin(t = 0.1, b = 0.1), color = "gray10", size = 20), 
     legend.title = element_blank(), 
     axis.line.y = element_line(color = "gray10", linewidth = 0.2),
     axis.ticks.y = element_line(color = "gray10", linewidth = 0.2),
@@ -275,7 +314,16 @@ abun_tested_genus %>%
     panel.grid.major = element_line(linewidth = 0.2, color = "gray90")
   )
 
-ggsave(paste0(OutputPath, "plots/results/stackedbar_cum_abun_genus.png"), width =5, height = 3, units = "in")
+
+stacked_bar + theme(legend.text = element_markdown(margin = margin(t = 0.1, b = 0.1), color = "gray10", size = 48), 
+)
+ggsave(paste0(OutputPath, "plots/results/legend.png"), width =16, height =8 , units = "in", scale = 0.5)
+
+
+agg_pdf(paste0(OutputPath,"plots/results/Figure6_stacked_bar_", Sys.Date(),".pdf"), 
+        width = 16, height = 10, units = "in", res = 600)
+stacked_bar
+invisible(dev.off())
 
 
 ####################################
@@ -284,14 +332,21 @@ ggsave(paste0(OutputPath, "plots/results/stackedbar_cum_abun_genus.png"), width 
 
 source(paste0(SourcePath, "/fold_change_plot.R"))
 
+
+agg_png(paste0(OutputPath,"plots/results/Figure7_fold_change_", Sys.Date(),".png"), 
+        width = 4.8, height = 6, units = "in", res = 600)
 plot_article
-ggsave(paste0(OutputPath, "plots/results/foldchange_new_textsize.png"), width = 8.5, height = 8.8,  units = "in")
+invisible(dev.off())
 
+
+#ggsave(paste0(OutputPath, "plots/results/Figure7_fold_change_", Sys.Date(),".png"), width = 6, height = 8,  units = "in")
+
+
+
+agg_png(paste0(OutputPath,"plots/supplementary/FigureS9_fold_change_", Sys.Date(),".png"), 
+        width = 4.5, height = 5.5, units = "in", res = 600)
 plot_supplementary
-ggsave(paste0(OutputPath, "plots/supplementary_results/foldchange_common.png"), width = 8.8, height = 10,  units = "in")
-
-rm(plot_supplementary, plot_article)
-
+invisible(dev.off())
 
 
 

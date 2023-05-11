@@ -17,7 +17,7 @@ traffic_plot_with_bars <- function(
                                                      ), 
                                  add = F)), 
                    color = Sing_PS),
-              show.legend = F, size=11
+              show.legend = F, size=12
               ) +
     scale_color_manual(values = c("Before<br>primary settling"="black", 
                                   "Decrease after<br>primary settling"="black", 
@@ -28,21 +28,22 @@ traffic_plot_with_bars <- function(
                                  "Decrease after<br>primary settling"="#CE7E7E", 
                                  "Increase after<br>primary settling"="#6F8FAF", 
                                  "Insignificant after<br>primary settling"="gray80")) +
-    theme_xaringan(css_file = "xaringan-themer.css") +
+    #theme_xaringan(css_file = "xaringan-themer.css") +
     theme(axis.text.x.top = element_blank(), #element_text(size = 26), 
           axis.ticks.x.top = element_blank(), axis.ticks.y = element_blank(), 
           axis.title.x.top = element_markdown(size = 26,lineheight = 0.001, color = "grey10"), 
           axis.title.y = element_blank(),
+          panel.background = element_rect(fill = "white"),
           #strip.text.x = element_markdown(size = 32, face = "bold"),
           #legend.spacing.y = unit(2, 'cm'), 
           #strip.text.y = element_markdown(size = 32),
           axis.text.x.bottom = element_blank(), 
           #strip.background = element_blank(), 
-          axis.text.y = element_markdown(size = 30, color = "black"),
+          axis.text.y = element_markdown(size = 30, color = "black", family = "sans", vjust = 0.5, hjust = 1),
           #strip.placement = "outside", 
           legend.title = element_blank(),
           legend.position = "none",
-          panel.grid = element_line(linewidth = 0.2), 
+          panel.grid = element_line(linewidth = 0.2, color = "gray90"), 
           panel.grid.major.x = element_blank(),
           legend.text = element_markdown(size = 26, lineheight = 0.1)) + 
     guides(size = "none", label = "none",
@@ -55,7 +56,7 @@ traffic_plot_with_bars <- function(
                        limits = c(0, max(plot_df_1$mean_diff)+0.01)
                        ) +
     #coord_trans(x="sqrt") +
-    theme_xaringan(css_file = "xaringan-themer.css") +
+    #theme_xaringan(css_file = "xaringan-themer.css") +
     theme(axis.text.y = element_blank(), 
           axis.ticks.y = element_blank(), 
           axis.line.x.top = element_line(color = "grey10", linewidth = 0.2),
@@ -64,10 +65,11 @@ traffic_plot_with_bars <- function(
           legend.title = element_blank(),
           axis.title.x.top = element_text(size = 26, lineheight = 0.001, color = "grey10"), 
           axis.ticks.x.top = element_line(color = "grey10", linewidth = 0.2), 
-          axis.text.x.top = element_text(size = 18, color = "black"),
+          axis.text.x.top = element_text(size = 26, color = "black"),
           axis.title.y = element_blank(), 
+          panel.background = element_rect(fill = "white"),
           #axis.text.x.bottom = element_text(size = 20), axis.text.x.top = element_blank(),
-          panel.grid = element_line(linewidth = 0.2), 
+          panel.grid = element_line(linewidth = 0.2, color = "gray90"), 
           panel.grid.minor = element_blank(), 
           ) + 
     scale_fill_manual(values = c("Decrease"="#CE7E7E", 
@@ -123,7 +125,8 @@ list(A, EM, E, R)
 
 fold_change_all <- data[[3]] %>% 
   mutate(samples = map(samples, ~ 
-                         filter(., Genus %in% unlist(data_genus_all_samples$Tax)) %>% 
+                         ungroup(.) %>% 
+                         filter(Genus %in% unlist(data_genus_all_samples$Tax)) %>% 
                          distinct(Genus, rel_abun_genus))) %>% 
   unnest(samples) %>% 
   group_by(Genus, Plant, Date_rawdata) %>% 
@@ -150,7 +153,8 @@ fold_change_mean <- fold_change_all %>%
 # Makes df form plotting
 df_traffic <- data[[3]] %>%
   mutate(samples = map(samples, ~
-                         filter(., Genus %in% unlist(data_genus_all_samples$Tax)) %>%
+                         ungroup(.) %>% 
+                         filter(Genus %in% unlist(data_genus_all_samples$Tax)) %>%
                          select(Genus, rel_abun_genus, Guild) %>%
                          arrange(Guild) %>%
                          distinct(Genus, rel_abun_genus, .keep_all = T)
@@ -214,24 +218,28 @@ design <- c(
   area(2,4), area(2,5), # top
   area(2,6), area(2,7),# top
   area(2,8), area(2,9), # top
+  area(t = 3, l=1, r = 10),  # plotspacer
   ## PAO 
-  area(3,1), # Names
-  area(3,2), area(3,3), #   
-  area(3,4), area(3,5), # 
-  area(3,6), area(3,7),# 
-  area(3,8), area(3,9), # 
-  ## GAO
   area(4,1), # Names
-  area(4,2), area(4,3), #  
+  area(4,2), area(4,3), #   
   area(4,4), area(4,5), # 
   area(4,6), area(4,7),# 
   area(4,8), area(4,9), # 
+  area(5,l = 1, r = 10),  # plotspacer
+  ## GAO
+  area(6,1), # Names
+  area(6,2), area(6,3), #  
+  area(6,4), area(6,5), # 
+  area(6,6), area(6,7),# 
+  area(6,8), area(6,9), # 
+  area(7,l = 1, r = 10),  # plotspacer
   ## Nitrifiers
-  area(5,1), # Names
-  area(5,2), area(5,3), #  
-  area(5,4), area(5,5), # 
-  area(5,6), area(5,7),# 
-  area(5,8), area(5,9), #
+  area(8,1), # Names
+  area(8,2), area(8,3), #  
+  area(8,4), area(8,5), # 
+  area(8,6), area(8,7),# 
+  area(8,8), area(8,9), #
+  area(9,l = 1, r = 10),  # plotspacer
   # ## Filaments TH
   # area(6,1), # Names
   # area(6,2), area(6,3), #  
@@ -239,95 +247,103 @@ design <- c(
   # area(6,6), area(6,7),# 
   # area(6,8), area(6,9), # 
   ## Filaments
-  area(6,1), # Names
-  area(6,2), area(6,3), #  
-  area(6,4), area(6,5), # 
-  area(6,6), area(6,7),# 
-  area(6,8), area(6,9), # 
+  area(10,1), # Names
+  area(10,2), area(10,3), #  
+  area(10,4), area(10,5), # 
+  area(10,6), area(10,7),# 
+  area(10,8), area(10,9), # 
   # vertical text lines
   area(t = 2,l = 10), ## text line TOP 
-  area(t = 3,l = 10), ## text line
   area(t = 4,l = 10), ## text line
-  area(t = 5,l = 10), ## text line
-  area(t = 6,l = 10, b = 6) ## text line
+  area(t = 6,l = 10), ## text line
+  area(t = 8,l = 10), ## text line
+  area(t = 10,l = 10) ## text line
   #area(t = 7,l = 10, b = 8) ## text line
 )
 #
 
  #### Plotting
 
-label_height = 0.02
+label_height = 0.08
 plot_height = 1
 genus_name_width = 0.0004
 p1_width = 0.50 
-p2_width = 1.01
-vlabel_width = 0.2
+p2_width = 1.05
+vlabel_width = 0.17
 
 
 empty_plot <- ggplot() + scale_x_continuous(limits = c(0,1)) + scale_y_continuous(limits = c(0,1)) + 
-  theme_xaringan(css_file = "xaringan-themer.css") +
-  theme(plot.background = element_rect(fill = "gray80", inherit.blank = T), axis.title = element_blank(),
+  #theme_xaringan(css_file = "xaringan-themer.css") +
+  theme(plot.background = element_rect(fill = "gray80", color = "gray80", inherit.blank = T
+                                       ), axis.title = element_blank(),
         axis.text = element_blank(), panel.grid = element_blank(), 
-        panel.background = element_rect(fill = "transparent", color = "gray80"))
+        panel.background = element_rect(fill = "gray80", color = "gray80", inherit.blank = T
+                                        ), 
+        axis.ticks = element_blank(),
+        plot.margin = unit(c(0.01, 0.005, 0.005, 0.005),
+                           "inches"))
 
-plot_article <- empty_plot + geom_richtext(aes(x = 0.46, y = 0.5, label = "**Aalborg West**"), size=15, fill = NA, label.color = NA) + 
-  empty_plot + geom_richtext(aes(x = 0.37, y = 0.5, label = "**Ejby Mølle**"), size=15, fill = NA, label.color = NA) + 
-  empty_plot + geom_richtext(aes(x = 0.48, y = 0.5, label = "**Esbjerg West**"), size=15, fill = NA, label.color = NA) + 
-  empty_plot + geom_richtext(aes(x = 0.28, y = 0.5, label = "**Randers**"), size=15, fill = NA, label.color = NA) +
+plot_article <- empty_plot + geom_richtext(aes(x = 0.46, y = 0.4, label = "**Aalborg West**"), size=15, fill = NA, label.color = NA) + 
+  empty_plot + geom_richtext(aes(x = 0.37, y = 0.4, label = "**Ejby Mølle**"), size=15, fill = NA, label.color = NA) + 
+  empty_plot + geom_richtext(aes(x = 0.48, y = 0.4, label = "**Esbjerg West**"), size=15, fill = NA, label.color = NA) + 
+  empty_plot + geom_richtext(aes(x = 0.28, y = 0.4, label = "**Randers**"), size=15, fill = NA, label.color = NA) +
 ## TOP 15
-  T_15[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
+  T_15[[1]][[1]] + theme(axis.title.x.top = element_blank(), plot.margin = unit(c(0.001, 0.001, 0.001, 0.001),  "inches")) +
   T_15[[1]][[1]] + theme(axis.text.y = element_blank()) + T_15[[1]][[2]] + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   T_15[[2]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[2]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   T_15[[3]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[3]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   T_15[[4]][[1]]+ theme(axis.text.y = element_blank()) + T_15[[4]][[2]]  + scale_x_continuous(limits = c(0, 6.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
-## PAO 
-  PAO[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
+  plot_spacer() +
+  ## PAO 
+  PAO[[1]][[1]] + theme(axis.title.x.top = element_blank()) +theme(plot.margin = unit(c(0.001, 0.001, 0.001, 0.001),  "inches")) +
   PAO[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[1]][[2]] + theme(axis.title.x.top = element_blank()) + scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   PAO[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   PAO[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   PAO[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + PAO[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 5), position = "top",  name = "Mean fold change", expand = c(0,0))+
-## GAO 
-  GAO[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
+  plot_spacer() +
+  ## GAO 
+  GAO[[1]][[1]] + theme(axis.title.x.top = element_blank()) +theme(plot.margin = unit(c(0.001, 0.001, 0.001, 0.001),  "inches")) +
   GAO[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[1]][[2]] + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   GAO[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   GAO[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   GAO[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + GAO[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
-## Nitrifiers
-  Nit[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
+  plot_spacer() +
+  ## Nitrifiers
+  Nit[[1]][[1]] + theme(axis.title.x.top = element_blank()) + theme(plot.margin = unit(c(0.001, 0.001, 0.001, 0.001),  "inches")) +
   Nit[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[1]][[2]] + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   Nit[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   Nit[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
   Nit[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Nit[[4]][[2]]  +theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 4.5), position = "top",  name = "Mean fold change", expand = c(0,0))+
-## Filaments
-  Fila[[1]][[1]] + theme(axis.title.x.top = element_blank()) +
+  plot_spacer() +
+  ## Filaments
+  Fila[[1]][[1]] + theme(axis.title.x.top = element_blank()) + theme(plot.margin = unit(c(0.001, 0.001, 0.001, 0.001),  "inches")) +
   Fila[[1]][[1]] + theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[1]][[2]] + theme(axis.title.x.top = element_blank()) + scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   Fila[[2]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[2]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   Fila[[3]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[3]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   Fila[[4]][[1]]+ theme(axis.text.y = element_blank(), axis.title.x.top = element_blank()) + Fila[[4]][[2]]  + theme(axis.title.x.top = element_blank()) +scale_x_continuous(limits = c(0, 14.1), position = "top",  name = "Mean fold change", expand = c(0,0))+
   # Top 
   empty_plot +  geom_richtext(aes(x = 0.32, y = 0.5, label = "**15 most abundant genera**", angle = 270), 
-                size=11, fill = NA, label.color = NA) + 
+                size=13, fill = NA, label.color = NA) + 
 # Pao
 empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**PAO**", angle = 270), 
-                size=11, fill = NA, label.color = NA) + 
+                size=13, fill = NA, label.color = NA) + 
 # GAO
   empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**GAO**", angle = 270), 
-                size=11, fill = NA, label.color = NA) + 
+                size=13, fill = NA, label.color = NA) + 
   # Nit
   empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**Nit.**", angle = 270), 
-                size=10, fill = NA, label.color = NA, label.padding = unit(0.01, "mm")) + 
+                size=13, fill = NA, label.color = NA, label.padding = unit(0.01, "mm")) + 
 # Fila 
   empty_plot + geom_richtext(aes(x = 0.32, y = 0.5, label = "**Filaments**", angle = 270), 
-                size=11, fill = NA, label.color = NA) + 
+                size=13, fill = NA, label.color = NA) + 
 # PLOTLAYOUT 
   plot_layout(nrow = 2, guides = "collect", 
-              heights = c(2, 24, 6,4.2,1.3,7.2),
+              heights = c(1, 24, -3.2, 6 ,-3.2, 4.2, -3.2, 1.3, -3.2, 7.2),
               widths = c(genus_name_width, 
                          p1_width, p2_width,p1_width, p2_width, p1_width, p2_width,p1_width, p2_width, 
                          vlabel_width), 
               design = design) & 
   theme(legend.position = "none", axis.title.x = element_blank())
-
 
 
 
@@ -345,7 +361,8 @@ common <- data_genus_all_samples %>%
 ### Makes df form plotting common
 df_traffic_common <- data[[3]] %>%
   mutate(samples = map(samples, ~
-                         filter(., Genus %in% unlist(data_genus_all_samples$Tax)) %>%
+                         ungroup(.) %>% 
+                         filter(Genus %in% unlist(data_genus_all_samples$Tax)) %>%
                          select(Genus, rel_abun_genus, Guild) %>%
                          arrange(Guild) %>%
                          distinct(Genus, rel_abun_genus, .keep_all = T)

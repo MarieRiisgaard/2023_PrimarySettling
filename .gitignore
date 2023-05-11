@@ -3,5 +3,5 @@
 /presentation/markdown_files
 xaringan-themer.css
 /results
-/not_included_in_github
+scripts/not_included_in_github
 .Rhistory
